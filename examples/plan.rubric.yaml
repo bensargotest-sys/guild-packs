@@ -1,0 +1,97 @@
+type: critique_rubric
+version: '1.0.0'
+id: guild://software-development/plan-rubric
+domain: software-development
+
+criteria:
+  - name: context_grounding
+    description: "Is the plan grounded in actual codebase inspection? Does it reference real file paths, existing patterns, and current project state — not assumptions?"
+    weight: 0.25
+    scoring: >
+      1.0 = Plan references specific files, existing patterns, and current state observed through
+      code inspection. Assumptions are explicitly labeled. File paths are real and verified.
+      0.5 = Some code inspection evident but gaps — some file paths guessed, some patterns assumed.
+      0.0 = Plan written without inspecting the codebase. Generic advice that could apply to any project.
+    examples_good:
+      - "Inspected src/routes/ — 12 REST endpoints using Express Router pattern. WebSocket handler should follow same middleware chain (src/middleware/auth.ts)."
+      - "Assumption: tests use Jest (confirmed by jest.config.js and package.json scripts)."
+    examples_bad:
+      - "'Update the API routes' without specifying which files or what the current structure is"
+      - "Plan assumes a src/ directory exists when the project uses lib/"
+
+  - name: actionability
+    description: "Could a different agent execute this plan without asking clarifying questions? Are steps concrete with specific files, changes, and verification?"
+    weight: 0.30
+    scoring: >
+      1.0 = Every step specifies: file path, what to change/create, and how to verify.
+      Steps are ordered correctly. A different agent could execute without questions.
+      0.5 = Most steps are concrete but some are vague ('update configuration') or missing
+      verification. 0.0 = Steps are high-level directions, not executable instructions.
+    examples_good:
+      - "Step 3: Create src/ws/notifications.ts — export NotificationChannel class with subscribe(userId) and emit(event) methods. Verify: import in test, call subscribe, assert connection established."
+      - "Step 5: Run 'npm test -- --testPathPattern=ws' — expect all new WebSocket tests green. Then run full suite: 'npm test' — expect zero new failures."
+    examples_bad:
+      - "'Add WebSocket support' (which files? what functions? how to verify?)"
+      - "'Write tests for the new feature' (which tests? what assertions? what test file?)"
+
+  - name: risk_awareness
+    description: "Does the plan identify risks, tradeoffs, open questions, and things that could go wrong? Or is it naively optimistic?"
+    weight: 0.20
+    scoring: >
+      1.0 = Risks identified with mitigation strategies. Tradeoffs stated (what you're choosing NOT to do).
+      Open questions listed that could change the approach. Alternative approaches considered.
+      0.5 = Some risks mentioned but no mitigations, or tradeoffs acknowledged but not analyzed.
+      0.0 = No risks, tradeoffs, or open questions. Plan assumes everything will work perfectly.
+    examples_good:
+      - "Risk: socket.io adds 200KB bundle size. Mitigation: could use lighter 'ws' library but lose auto-reconnect. Decision: accept size for reliability."
+      - "Open question: does the deployment environment support WebSocket connections, or is there a proxy that strips Upgrade headers?"
+    examples_bad:
+      - "No risks section at all — plan reads like everything will work on first try"
+      - "'Risks: something might go wrong' (non-specific, not useful)"
+
+  - name: scope_appropriateness
+    description: "Is the plan's detail level appropriate for the task? Not a 20-step plan for a one-line fix, not a 3-step plan for a database migration."
+    weight: 0.15
+    scoring: >
+      1.0 = Detail level matches task complexity. Simple tasks get concise plans. Complex tasks
+      get thorough plans. No unnecessary steps. No missing critical steps.
+      0.5 = Slightly over- or under-detailed, but all important steps present.
+      0.0 = Wildly inappropriate scope — either trivial task with massive plan, or complex task
+      with handwave plan.
+    examples_good:
+      - "Rename refactor: 3 steps — find all references, rename, run tests. Done."
+      - "Database migration: 15 steps covering schema, data, validation, cutover, rollback."
+    examples_bad:
+      - "10-step plan with risk analysis for changing a log message"
+      - "3-step plan for migrating a database: 'export data, import data, verify'"
+
+  - name: plan_only_discipline
+    description: "Did the agent ONLY plan, without executing changes? No file modifications, no mutating commands, no code written outside the plan document."
+    weight: 0.10
+    scoring: >
+      1.0 = Only read-only operations performed. Plan saved as markdown. No project files modified.
+      0.5 = Plan delivered but agent also made a small change ('while I was looking, I fixed a typo').
+      0.0 = Agent started executing the plan instead of just writing it.
+    examples_good:
+      - "Used read_file and search_files to inspect. Saved plan to .hermes/plans/. No other files touched."
+    examples_bad:
+      - "Wrote the plan AND created the new file mentioned in step 1"
+      - "Ran npm install as part of 'checking if the dependency exists'"
+
+pass_threshold: 0.70
+
+provenance:
+  author_agent: agent://hermes/skill-retrofit-agent
+  created: '2026-03-22T21:22:00Z'
+  evidence: >
+    Derived from the Hermes plan skill v1.0.0 output requirements and core behavior rules.
+    Actionability weight (0.30) reflects the skill's emphasis on 'concrete and actionable' plans.
+    Plan-only discipline criterion directly encodes the skill's prohibition on executing changes
+    during plan mode. Context grounding criterion enforces the skill's instruction to inspect
+    the repo before planning.
+  confidence: inferred
+  failure_cases:
+    - "Plan-only discipline (0.10) is easy to pass and rarely differentiates — most agents don't accidentally execute during planning"
+    - "Actionability scoring is subjective — 'could another agent execute this' depends on that agent's capabilities"
+    - "Risk awareness may penalize plans for simple tasks where risks genuinely don't exist"
+    - "Doesn't evaluate whether the proposed approach is actually correct — only whether the plan is well-structured"

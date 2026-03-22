@@ -1,0 +1,149 @@
+type: workflow_pack
+version: '1.0.0'
+id: guild://software-development/plan
+problem_class: "Create a concrete, actionable implementation plan for a software task without executing any changes"
+mental_model: >
+  Planning is thinking made visible. A good plan separates understanding from doing —
+  inspect the full context first, then write down exactly what to change, in what order,
+  and how to verify each step. The plan is the deliverable, not the code. Plans that
+  are vague or skip verification steps are worse than no plan because they create
+  false confidence.
+required_inputs:
+  - "description of the task or goal to plan for"
+  - "access to the codebase (read-only) for context inspection"
+  - "any constraints, deadlines, or requirements from the operator"
+phases:
+  - name: context_inspection
+    description: >
+      Inspect the codebase, project structure, existing patterns, and related code using
+      read-only tools. Understand the current state before proposing changes. Check for
+      existing tests, CI configuration, documentation conventions, and dependency structure.
+      If the request is ambiguous, ask one brief clarifying question instead of guessing.
+    checkpoint: >
+      Project structure understood. Relevant files and modules identified. Existing patterns
+      and conventions noted. Dependencies mapped. Any ambiguities resolved or explicitly
+      flagged as assumptions.
+    anti_patterns:
+      - "Writing a plan without reading the codebase first"
+      - "Assuming project structure instead of inspecting it"
+      - "Guessing at conventions instead of checking existing code for patterns"
+      - "Making a plan for code you haven't read — assumptions compound into wrong plans"
+      - "Asking too many clarifying questions when you could inspect the code and infer"
+    prompts:
+      - "What is the project structure? List key directories and entry points."
+      - "What files are likely relevant to this task? Read them."
+      - "What patterns does existing code follow? (naming, architecture, error handling, testing)"
+      - "Is the request clear enough to plan? If not, what is the ONE most important clarification needed?"
+
+  - name: approach_design
+    description: >
+      Define the high-level approach: what strategy will be used, what components need
+      to change, and in what order. Identify the goal, current assumptions, and proposed
+      architecture. Consider alternative approaches and justify the chosen one. Map out
+      risks, tradeoffs, and open questions.
+    checkpoint: >
+      Goal is stated clearly. Approach is defined with rationale. At least one alternative
+      was considered. Risks and tradeoffs are documented. Open questions that could change
+      the approach are listed.
+    anti_patterns:
+      - "Jumping straight to step-by-step without defining the overall approach first"
+      - "Only considering one approach without evaluating alternatives"
+      - "Ignoring risks and tradeoffs — every approach has them"
+      - "Over-engineering the plan for a simple task"
+    prompts:
+      - "What is the goal in one sentence?"
+      - "What is the proposed approach? Why this approach over alternatives?"
+      - "What are the risks? What could go wrong?"
+      - "What tradeoffs are being made? What are you choosing NOT to do?"
+
+  - name: step_by_step_planning
+    description: >
+      Break the approach into concrete, ordered steps. Each step must specify: exact file
+      paths to create or modify, what changes to make, and how to verify the step succeeded.
+      Include test targets and validation commands. The plan should be detailed enough
+      that a different agent could execute it without additional context.
+    checkpoint: >
+      Every step has: specific file paths, concrete changes (not vague descriptions),
+      and a verification method. Steps are ordered correctly (dependencies respected).
+      Test and validation steps are included. A different agent reading this plan could
+      execute it.
+    anti_patterns:
+      - "Vague steps like 'update the API' without specifying which files and what changes"
+      - "Missing file paths — 'modify the config' instead of 'modify src/config/database.yml'"
+      - "No verification steps — how do you know each step worked?"
+      - "Steps that depend on each other listed in wrong order"
+      - "Over-detailed plans for trivial changes (one-line fix doesn't need 20 steps)"
+    prompts:
+      - "For each step: what file, what change, how to verify?"
+      - "Are steps in the right order? Does step N depend on step M being done first?"
+      - "Could a different agent execute this plan without asking questions? If not, add detail."
+      - "What tests should be run after each step and after all steps?"
+
+  - name: plan_delivery
+    description: >
+      Write the plan as a structured markdown document and save it to the workspace
+      plan directory (.hermes/plans/YYYY-MM-DD_HHMMSS-slug.md). Include: Goal, Context/Assumptions,
+      Approach, Step-by-step plan, Files to change, Tests/Validation, and Risks/Open Questions.
+      Do NOT execute any changes — the plan is the deliverable.
+    checkpoint: >
+      Plan is saved as a markdown file in .hermes/plans/. Plan contains all required sections.
+      No code was modified, no mutating commands were run. Brief summary provided to operator
+      with the plan path.
+    anti_patterns:
+      - "Executing the plan instead of just writing it"
+      - "Running mutating commands (git commit, file edits, npm install) during planning"
+      - "Delivering the plan only in chat without saving it as a file"
+      - "Missing required sections (especially Risks/Open Questions)"
+      - "Over-long plans that bury the key decisions in prose"
+    prompts:
+      - "Write the plan as markdown with sections: Goal, Context, Approach, Steps, Files, Tests, Risks."
+      - "Save to .hermes/plans/ with timestamped filename."
+      - "Confirm: did you modify any project files or run any mutating commands? (You should not have.)"
+      - "Give a 1-2 sentence summary of the plan and its save location."
+
+escalation_rules:
+  - "Escalate if the task is genuinely underspecified and cannot be inferred from code context"
+  - "Escalate if the plan requires architectural decisions that should be made by the operator"
+  - "Escalate if the plan involves irreversible changes (data migration, API deprecation) that need approval"
+  - "Escalate if there are multiple valid approaches with significantly different tradeoff profiles"
+
+evaluator_rubric: guild://software-development/plan-rubric
+
+examples:
+  - problem: "Plan the addition of WebSocket support to an existing REST API for real-time notifications"
+    solution: >
+      Context: Inspected project — Express.js backend, PostgreSQL, existing REST endpoints in src/routes/.
+      No existing WebSocket code. Tests in tests/ using Jest. Approach: Add socket.io alongside Express,
+      create notification channel per user, emit on DB events via pg_notify. Steps: 1) Add socket.io
+      dependency, 2) Create src/ws/server.ts with auth middleware reuse, 3) Create src/ws/notifications.ts
+      channel handler, 4) Add pg_notify trigger on notifications table, 5) Create src/ws/client.ts test
+      helper, 6) Write integration tests. Risks: socket.io adds ~200KB to bundle; alternative ws library
+      is lighter but less featured.
+    outcome: "Plan saved to .hermes/plans/2026-03-22_143000-websocket-support.md. Executed next day by implementation agent in 2 hours with zero deviations."
+
+  - problem: "Plan a database migration from MySQL to PostgreSQL"
+    solution: >
+      Context: 47 tables, 12 stored procedures, ORM used for most queries but 8 raw SQL files.
+      Approach: Migrate schema first, then data, then switch connection. Dual-write period for
+      validation. Steps: 1) Generate PG schema from ORM models, 2) Manually convert 12 stored procs,
+      3) Convert 8 raw SQL files (MySQL-specific syntax flagged), 4) pgloader for data migration,
+      5) Dual-write adapter for 1-week validation, 6) Switch connection string, 7) Remove dual-write.
+      Risks: Stored procedures may have MySQL-specific behavior. Open question: downtime tolerance?
+    outcome: "Plan surfaced 3 blocking questions the team hadn't considered. Migration completed in 2 weeks instead of estimated 1 month."
+
+provenance:
+  author_agent: agent://hermes/skill-retrofit-agent
+  created: '2026-03-22T21:22:00Z'
+  evidence: >
+    Retrofitted from Hermes plan skill v1.0.0. The original skill defines plan-mode behavior
+    for Hermes agents — read-only investigation followed by markdown plan output. This workflow
+    pack adds explicit phases, checkpoints, and anti-patterns that were implicit in the original
+    skill's instructions. The context inspection and approach design phases make explicit the
+    thinking that the original skill assumed the agent would do.
+  confidence: inferred
+  failure_cases:
+    - "For trivial tasks (rename a variable, fix a typo), the 4-phase process is overkill — generates a 2-page plan for a 1-line change"
+    - "Context inspection phase can be very slow on large monorepos — agent may read too many files"
+    - "Plan quality depends heavily on the agent's ability to predict what will go wrong — junior agents produce optimistic plans"
+    - "Assumes .hermes/plans/ directory convention — may not apply to all project structures"
+    - "Plans can become stale quickly if the codebase changes between planning and execution"

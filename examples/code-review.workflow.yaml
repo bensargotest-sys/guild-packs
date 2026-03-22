@@ -1,0 +1,141 @@
+type: workflow_pack
+version: '1.0.0'
+id: guild://software-development/code-review
+problem_class: "Review code changes, pull requests, or existing code for security vulnerabilities, error handling gaps, code quality issues, and testing coverage"
+mental_model: >
+  Code review is a security gate first, quality gate second. Every change is a potential
+  attack surface, error source, or maintenance burden. Review in priority order: security,
+  error handling, correctness, then style. Be constructive — explain why something is
+  an issue and offer a fix, don't just point out problems.
+required_inputs:
+  - "code diff or files to review"
+  - "language and framework context"
+  - "purpose of the change (what problem it solves)"
+  - "whether a test suite exists for the project"
+phases:
+  - name: security_audit
+    description: >
+      Scan for hardcoded secrets, API keys, or credentials. Check that all user-provided
+      input is validated. Verify SQL queries use parameterized statements. Ensure file
+      operations validate paths against traversal. Confirm authentication and authorization
+      checks are present where needed. Flag any use of innerHTML, eval, or other injection vectors.
+    checkpoint: >
+      All user input entry points identified. No hardcoded secrets found (or flagged as critical).
+      SQL/query construction reviewed for injection. File path operations checked for traversal.
+      Auth checks present on protected routes/operations.
+    anti_patterns:
+      - "Skipping security review because 'it's just an internal tool'"
+      - "Reviewing only the happy path — attackers don't follow happy paths"
+      - "Assuming framework handles input validation automatically without verifying"
+      - "Ignoring transitive dependencies or imported utilities that handle user data"
+    prompts:
+      - "Search the diff for any string that looks like a key, token, password, or secret."
+      - "For each user input entry point: what validation exists? What happens with malicious input?"
+      - "Are SQL queries parameterized? Check for string concatenation or f-strings in queries."
+      - "Do file operations validate/sanitize paths? Could a user-controlled path escape the intended directory?"
+
+  - name: error_handling_review
+    description: >
+      Verify all external calls (API, database, file I/O, network) have proper error handling.
+      Check that errors are logged with sufficient context but no sensitive data. Ensure
+      user-facing errors are helpful without leaking internal details. Verify resources
+      are cleaned up in finally blocks, context managers, or defer statements.
+    checkpoint: >
+      Every external call has error handling. Error logs include context (what operation,
+      what input) but no credentials or PII. User-facing errors are sanitized. Resource
+      cleanup is guaranteed (finally/context manager/defer).
+    anti_patterns:
+      - "Bare except/catch blocks that swallow errors silently"
+      - "Logging the full request object including auth headers"
+      - "Showing stack traces or internal paths to end users"
+      - "Opening resources without guaranteed cleanup (missing finally/with/defer)"
+    prompts:
+      - "For each external call (API, DB, file): what happens when it fails? Is the error caught and handled?"
+      - "What gets logged on error? Does it include enough context to debug? Does it leak secrets or PII?"
+      - "What does the user see when something fails? Is it helpful without exposing internals?"
+      - "Are all resources (connections, file handles, locks) cleaned up even on error paths?"
+
+  - name: code_quality_review
+    description: >
+      Check that functions are focused (single responsibility, ideally under 50 lines).
+      Verify naming is descriptive. Flag commented-out code. Ensure complex logic has
+      explanatory comments. Identify code duplication that should be extracted. Check
+      for proper use of language idioms and framework conventions.
+    checkpoint: >
+      No functions doing multiple unrelated things. Names are self-documenting. No dead
+      commented-out code. Complex sections are explained. Duplication flagged with
+      extraction suggestion.
+    anti_patterns:
+      - "Nitpicking style when there are substantive issues to address"
+      - "Suggesting rewrites when the code is correct and readable"
+      - "Flagging every minor style issue instead of focusing on impactful improvements"
+      - "Ignoring code duplication because each instance is 'small'"
+    prompts:
+      - "Are there functions over 50 lines or doing multiple things? Suggest how to split them."
+      - "Is there any commented-out code? Flag it for removal."
+      - "Is there duplicated logic that should be extracted into a shared function?"
+      - "Would a reader understand this code without the PR description? If not, where are comments needed?"
+
+  - name: testing_assessment
+    description: >
+      Verify edge cases are handled (empty inputs, nulls, boundary values, overflow).
+      Check that both happy path and error paths have test coverage. Confirm new code
+      has corresponding tests if a test suite exists. Identify untested branches or
+      conditions.
+    checkpoint: >
+      Edge cases are either handled in code or tested. Happy path and primary error paths
+      have tests. New public functions/endpoints have test coverage. Any untested critical
+      paths are flagged.
+    anti_patterns:
+      - "Accepting 'tests pass' without checking what the tests actually cover"
+      - "Not flagging missing tests because 'the project doesn't have good test coverage anyway'"
+      - "Only checking that tests exist without verifying they test meaningful behavior"
+      - "Ignoring boundary conditions (zero, negative, max int, empty string, very long string)"
+    prompts:
+      - "What edge cases exist for this change? Are they handled or tested? (empty, null, boundary, overflow)"
+      - "Is the error path tested, or only the happy path?"
+      - "For new public functions: is there a test? If not, what test would you write?"
+      - "Are there conditional branches without test coverage?"
+
+escalation_rules:
+  - "Escalate if a critical security vulnerability is found (hardcoded secrets, SQL injection, auth bypass)"
+  - "Escalate if the change modifies authentication, authorization, or cryptography code"
+  - "Escalate if the reviewer lacks domain knowledge to assess business logic correctness"
+  - "Escalate if the change has no tests and the reviewer cannot determine correctness from code alone"
+
+evaluator_rubric: guild://software-development/code-review-rubric
+
+examples:
+  - problem: "Review PR adding OAuth2 flow to Express backend"
+    solution: >
+      Security audit: found token stored in localStorage (XSS risk), missing PKCE challenge,
+      no refresh token rotation. Error handling: found bare catch returning 500 with stack trace
+      to client. Quality: auth middleware was 120 lines, suggested splitting into token validation,
+      scope checking, and session management. Testing: no tests for expired token or invalid scope.
+    outcome: "3 critical security issues fixed before merge. Auth middleware split into 3 focused functions. 8 tests added."
+
+  - problem: "Review 2000-line React component refactor"
+    solution: >
+      Security: no injection risks (React escapes by default, verified no dangerouslySetInnerHTML).
+      Error handling: API calls missing error boundaries, loading states incomplete.
+      Quality: 7 unnecessary re-renders identified via missing useMemo/useCallback.
+      Suggested memo boundaries. Found broken error boundary (caught error but rendered nothing).
+      Testing: snapshot tests existed but no behavioral tests for state transitions.
+    outcome: "Render count reduced 60%. Error boundary fixed. 12 behavioral tests added covering state transitions."
+
+provenance:
+  author_agent: agent://hermes/skill-retrofit-agent
+  created: '2026-03-22T21:22:00Z'
+  evidence: >
+    Retrofitted from Hermes code-review skill. Original skill is a checklist-based approach
+    used by Hermes agents for PR reviews and code audits. Security-first ordering reflects
+    real-world priority — security bugs are costlier to fix post-merge than quality issues.
+    Patterns drawn from common vulnerability classes (OWASP Top 10 overlap: injection, XSS,
+    broken auth, sensitive data exposure).
+  confidence: inferred
+  failure_cases:
+    - "Security audit phase is language-generic — misses language-specific vulnerabilities (e.g., Go goroutine leaks, Rust unsafe blocks)"
+    - "Code quality thresholds (50-line functions) are arbitrary and can be wrong for certain patterns (state machines, parsers)"
+    - "Doesn't address performance review — a hot-path change could pass all criteria but introduce latency"
+    - "Testing assessment assumes unit test paradigm — less applicable to integration-heavy or E2E-tested projects"
+    - "Tone guidelines are hard to enforce programmatically — agent may still be overly critical"

@@ -1,0 +1,98 @@
+type: critique_rubric
+version: '1.0.0'
+id: guild://software-development/code-review-rubric
+domain: software-development
+
+criteria:
+  - name: security_coverage
+    description: "Did the review identify all security-relevant issues? Were injection, auth, secrets, and input validation all checked?"
+    weight: 0.30
+    scoring: >
+      1.0 = All user input entry points audited. Injection vectors checked. Auth/secrets reviewed.
+      No security issues missed (verified post-merge). 0.5 = Major categories checked but
+      some entry points missed, or findings are surface-level without exploit explanation.
+      0.0 = Security not reviewed, or critical vulnerability missed that was later exploited.
+    examples_good:
+      - "Found SQL injection in search endpoint, demonstrated with example payload, suggested parameterized query fix"
+      - "Identified that JWT secret was hardcoded in config.py, flagged as critical, suggested environment variable"
+    examples_bad:
+      - "Reviewed code style but didn't notice user input passed directly to shell command"
+      - "Said 'looks secure' without checking any specific attack vectors"
+
+  - name: issue_prioritization
+    description: "Are issues correctly categorized by severity? Critical security bugs vs. nice-to-have suggestions vs. style nits?"
+    weight: 0.15
+    scoring: >
+      1.0 = Clear severity levels. Critical issues (security, data loss, crashes) separated from
+      suggestions and nits. Actionable fix provided for every critical issue. 0.5 = Issues listed
+      but not prioritized, or severity mislabeled (style issue called critical, or security issue
+      buried in suggestions). 0.0 = Flat list of issues with no priority, or only style nits
+      while security issues exist.
+    examples_good:
+      - "CRITICAL: SQL injection in /api/search. SUGGESTION: extract duplicate validation logic. NIT: inconsistent naming."
+      - "Must-fix: missing auth check on admin endpoint. Nice-to-have: this function could be simplified."
+    examples_bad:
+      - "Listed 'use const instead of let' as the same priority as 'auth token exposed in URL'"
+      - "20 style comments, zero security or correctness observations"
+
+  - name: constructive_feedback
+    description: "Does the review explain WHY something is an issue and offer a concrete fix? Is the tone constructive?"
+    weight: 0.15
+    scoring: >
+      1.0 = Every issue includes: what's wrong, why it matters, and a suggested fix or alternative.
+      Tone is constructive. Good patterns in the code are acknowledged. 0.5 = Issues identified
+      but without explanations or fixes. Or explanations provided but tone is dismissive.
+      0.0 = Just pointing out problems ('this is wrong') with no explanation or suggestion.
+    examples_good:
+      - "'This query concatenates user input, which allows SQL injection. Use parameterized queries: cursor.execute(\"SELECT * FROM users WHERE id = ?\", (user_id,))'"
+      - "'Nice use of the strategy pattern here for payment processors — clean and extensible.'"
+    examples_bad:
+      - "'This is bad practice.' (no explanation of why or what to do instead)"
+      - "'Why would you do it this way?' (dismissive, no constructive alternative)"
+
+  - name: error_handling_coverage
+    description: "Did the review check error paths, resource cleanup, and failure modes — not just the happy path?"
+    weight: 0.20
+    scoring: >
+      1.0 = All external calls checked for error handling. Resource cleanup verified.
+      User-facing error messages reviewed. Logging checked for context without leaks.
+      0.5 = Some error handling checked but gaps (e.g., file I/O checked but not API calls).
+      0.0 = Only happy path reviewed. Error handling not mentioned.
+    examples_good:
+      - "Flagged that database connection is opened but never closed on error path — suggested context manager"
+      - "Noted that API error response includes full stack trace — suggested sanitized user message"
+    examples_bad:
+      - "Reviewed all the business logic but didn't notice bare 'except: pass' swallowing errors"
+      - "Didn't check what happens when the external API returns 500 or times out"
+
+  - name: testing_gap_identification
+    description: "Did the review identify missing test coverage, untested edge cases, and branches without assertions?"
+    weight: 0.20
+    scoring: >
+      1.0 = Missing tests identified for new code. Edge cases called out (empty, null, boundary).
+      Untested error paths flagged. Specific test suggestions provided. 0.5 = Tests mentioned
+      generally ('should add tests') but no specific gaps or cases identified.
+      0.0 = Testing not addressed in the review at all.
+    examples_good:
+      - "No test for when user_id is None — this will reach the DB query and throw. Add test_search_with_null_user_id."
+      - "Happy path tested but no test for concurrent access — add test with threading to verify lock behavior."
+    examples_bad:
+      - "'Add more tests' without specifying what scenarios are missing"
+      - "Didn't notice that the test only checks the return value, not the side effects (DB writes, API calls)"
+
+pass_threshold: 0.70
+
+provenance:
+  author_agent: agent://hermes/skill-retrofit-agent
+  created: '2026-03-22T21:22:00Z'
+  evidence: >
+    Derived from the Hermes code-review skill checklist structure. Security weight (0.30) reflects
+    the skill's 'Security First' ordering. Criteria map 1:1 to the skill's four review areas
+    plus its tone guidelines. Constructive feedback criterion encodes the skill's explicit
+    instruction to 'explain why, offer solutions, acknowledge good patterns.'
+  confidence: inferred
+  failure_cases:
+    - "Security coverage weight (0.30) may be too high for internal tools with no user-facing input"
+    - "Constructive feedback is subjective — different evaluators may score tone differently"
+    - "Testing gap criterion assumes unit tests are the right testing paradigm — not always true"
+    - "Doesn't measure review thoroughness (did the reviewer read all files, or just skim the diff?)"
