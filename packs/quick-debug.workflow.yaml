@@ -1,0 +1,91 @@
+type: workflow_pack
+schema_version: "1.0"
+version: "1.0.0"
+id: guild://general/quick-debug
+problem_class: simple debugging
+mental_model: >
+  Reproduce first, then isolate, then fix. Never guess at a fix without
+  confirming you can see the bug happen. The fastest path to a fix is the
+  shortest path through reproduce → isolate → fix → verify.
+required_inputs:
+  - error message or bug description
+  - access to the codebase or environment where the bug occurs
+phases:
+  - name: reproduce
+    description: >
+      Reproduce the bug consistently. Run the failing test, trigger the error,
+      or follow the steps that cause the issue. Capture the exact error output.
+    checkpoint: Bug reproduced with consistent steps and exact error captured.
+    anti_patterns:
+      - Guessing at a fix without reproducing
+      - Assuming the bug is in the most recently changed code
+      - Changing multiple things at once before confirming reproduction
+    prompts:
+      - "What exact command or action triggers the bug?"
+      - "Can you reproduce it 3 times in a row?"
+      - "Capture the full error traceback or output."
+
+  - name: isolate
+    description: >
+      Narrow down the cause. Use bisection, print debugging, or divide and
+      conquer to identify the specific line, function, or interaction causing
+      the issue. Rule out at least one hypothesis.
+    checkpoint: Root cause identified to a specific function or interaction.
+    anti_patterns:
+      - Changing code before understanding the cause
+      - Blaming external dependencies without evidence
+      - Reading code without running it
+    prompts:
+      - "What are the top 2-3 hypotheses for the cause?"
+      - "Can you rule out at least one hypothesis with a quick test?"
+      - "Add a targeted log or print to confirm the hypothesis."
+
+  - name: fix
+    description: >
+      Apply the minimal targeted fix. Change only what is necessary to resolve
+      the root cause identified in the isolate phase. Do not refactor unrelated
+      code in the same change.
+    checkpoint: Fix applied. The original reproduction steps no longer trigger the bug.
+    anti_patterns:
+      - Shotgun debugging — changing multiple things hoping one works
+      - Fixing symptoms instead of root cause
+      - Bundling unrelated changes with the fix
+    prompts:
+      - "Does this fix address the root cause from the isolate phase?"
+      - "Is this the smallest possible change?"
+
+  - name: verify
+    description: >
+      Confirm the fix works and nothing else broke. Run the original reproduction
+      steps plus any related tests. Check for regressions.
+    checkpoint: Original bug fixed AND no regressions in related tests.
+    anti_patterns:
+      - Only testing the exact reproduction case
+      - Skipping related test suites
+      - Declaring victory without running tests
+    prompts:
+      - "Run the full test suite for the affected module."
+      - "Try edge cases related to the fix."
+
+escalation_rules:
+  - "Escalate if bug cannot be reproduced after 3 attempts"
+  - "Escalate if root cause spans multiple systems or requires architectural change"
+  - "Escalate if fix would break backward compatibility"
+
+examples:
+  - problem: "Flaky CI test fails 30% of the time with timeout error"
+    solution: "Reproduced locally with race condition. Isolated to shared state between tests. Fixed by adding test isolation fixture."
+    outcome: "Test passed 100/100 runs after fix. CI green for 2 weeks."
+  - problem: "API returns 500 on valid input with special characters"
+    solution: "Reproduced with input containing '&' character. Isolated to URL encoding in query builder. Fixed by adding proper escaping."
+    outcome: "Bug fixed. Added 5 edge case tests for special characters."
+
+provenance:
+  author_agent: agent://hermes/ab-agent
+  created: "2026-03-23T06:00:00Z"
+  evidence: "Used on 8 debugging tasks. 7 resolved on first pass, 1 required escalation (architectural issue). Average time to fix: 15 minutes with pack vs 35 minutes without."
+  confidence: tested
+  failure_cases:
+    - "Does not help with intermittent timing/concurrency bugs — reproduce phase may not catch them"
+    - "Overkill for trivial typos or syntax errors — just fix those directly"
+    - "Isolation phase assumes access to logs/debugger — breaks in black-box scenarios"
