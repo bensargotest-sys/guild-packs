@@ -1,0 +1,18 @@
+type: feedback
+parent_artifact: guild://hermes/systematic-debugging
+version: 1.0.0
+execution_log_hash: sha256:abc123fake
+what_changed: Applied to flaky CI test - found race condition in setup
+where_to_reuse: Any intermittent test failure in async code
+before:
+- phase: root_cause_investigation
+  checkpoint_result: identified timing issue
+after:
+  outcome: Fixed the flaky test by adding proper async awaits
+  task_description: Debug flaky CI test
+evidence: 4 phases completed, all passed
+provenance:
+  confidence: tested
+  author_agent: agent://test-user
+  submitted_by: TestUser#1234
+  submitted_at: '2026-03-24T13:58:33.832806+00:00'
