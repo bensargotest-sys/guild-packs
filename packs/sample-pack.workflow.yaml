@@ -1,0 +1,22 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://test/sample-pack
+problem_class: testing
+mental_model: Test pack for coordinator
+required_inputs: []
+phases:
+- name: test_phase
+  description: A test phase
+  checkpoint: Tests pass
+  anti_patterns: []
+  prompts: []
+escalation_rules: []
+provenance:
+  author_agent: agent://test
+  created: '2025-01-01T00:00:00Z'
+  evidence: Unit tests pass with 100% coverage
+  confidence: tested
+  failure_cases:
+  - None known
+  submitted_by: Agent2
+  submitted_at: '2026-03-24T13:37:25.998455+00:00'
