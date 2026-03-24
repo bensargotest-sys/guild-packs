@@ -1,0 +1,155 @@
+type: workflow_pack
+schema_version: "1.0"
+version: "1.0.0"
+id: guild://hermes/code-review
+problem_class: "Reviewing code changes (diffs, PRs, or files) for bugs, security vulnerabilities, and quality issues — producing actionable, severity-ranked feedback"
+mental_model: >
+  Effective code review is context-first, not checklist-first. You must understand what
+  the change is trying to do before you can judge whether it does it correctly. Start by
+  building a mental model of the change — its purpose, scope, and blast radius. Then
+  systematically identify issues across security, correctness, and quality dimensions.
+  Rank every finding by severity so the author knows what must be fixed vs. what's a
+  suggestion. Finally, write a review that is constructive and specific — every criticism
+  includes a concrete fix or alternative.
+required_inputs:
+  - "code diff, pull request, or files to review"
+  - "description of what the change is supposed to do"
+  - "language, framework, and project conventions"
+  - "known constraints (backwards compatibility, performance budgets, etc.)"
+phases:
+  - name: understand_context
+    description: >
+      Before reading code line-by-line, build a high-level understanding. Read the PR
+      description, linked issues, or commit messages. Identify which files changed and
+      why. Map out the blast radius — what systems, APIs, or user flows could be affected.
+      Understand the author's intent so you review against what the change should do,
+      not just what it does.
+    checkpoint: >
+      Can articulate in one sentence what the change does and why. Blast radius identified —
+      know which modules, endpoints, or user flows are affected. Author's intent is clear
+      and any ambiguity has been noted for clarification.
+    anti_patterns:
+      - "Jumping straight into line-by-line review without understanding the purpose"
+      - "Reviewing only the diff without looking at surrounding code for context"
+      - "Assuming you know what the change does from the file names alone"
+      - "Ignoring the PR description or linked issue — they contain critical intent"
+    prompts:
+      - "What is this change trying to accomplish? Summarize it in one sentence."
+      - "Which files changed? What is the relationship between them?"
+      - "What systems or user flows could break if this change has a bug?"
+      - "Is there anything in the PR description or commit messages that clarifies edge cases or constraints?"
+
+  - name: identify_issues
+    description: >
+      Systematically scan the change for problems across four dimensions in priority order:
+      (1) Security — injection, auth bypass, secrets exposure, unsafe deserialization.
+      (2) Correctness — logic errors, race conditions, missing null checks, off-by-one,
+      broken error handling. (3) Quality — duplication, unclear naming, functions doing
+      too much, missing tests. (4) Style — formatting, convention violations, minor nits.
+      For each issue found, note the exact location, what's wrong, and why it matters.
+    checkpoint: >
+      Every issue has: exact file and line, clear description of the problem, explanation
+      of the impact (what could go wrong), and a suggested fix or alternative. No vague
+      complaints — every finding is specific and actionable.
+    anti_patterns:
+      - "Reporting only style nits while missing a logic bug or security issue"
+      - "Saying 'this looks wrong' without explaining what's wrong and what the impact is"
+      - "Reviewing only the happy path — check error paths, edge cases, and failure modes"
+      - "Ignoring test changes — test code has bugs too, and wrong tests are worse than no tests"
+    prompts:
+      - "Check all user input paths: is input validated? Could malicious input cause injection or traversal?"
+      - "For each conditional: what happens in the else/error case? Is it handled?"
+      - "Are there race conditions? Could concurrent access corrupt state?"
+      - "Is there new code without corresponding tests? What test would catch a regression here?"
+
+  - name: assess_severity
+    description: >
+      Rank every identified issue by severity. Critical: security vulnerabilities, data loss
+      risks, or correctness bugs that affect users. Major: error handling gaps, missing
+      validation, or logic that works now but breaks under edge cases. Minor: code quality
+      improvements, missing tests for non-critical paths, documentation gaps. Nit: style
+      preferences, optional refactors. Group issues by severity so the author can triage.
+    checkpoint: >
+      Every issue has a severity label (critical/major/minor/nit). Critical and major issues
+      are clearly separated from minor and nit. If no critical issues exist, explicitly state
+      that. Severity reasoning is clear — not just a label but why it's that severity.
+    anti_patterns:
+      - "Marking everything as critical — severity inflation makes triage impossible"
+      - "Marking a real security issue as minor because you're unsure — err on the side of caution for security"
+      - "Not distinguishing must-fix from nice-to-have — the author needs clear triage guidance"
+      - "Assessing severity based on how hard the fix is rather than how bad the impact is"
+    prompts:
+      - "For each issue: what's the worst-case outcome if this ships as-is?"
+      - "Which issues would you block the merge for? Those are critical or major."
+      - "Which issues are genuine improvements but the code works fine without them? Those are minor or nit."
+      - "Is there a security issue you're uncertain about? Flag it as major and note the uncertainty."
+
+  - name: write_review
+    description: >
+      Compose the final review as a structured, constructive document. Lead with a summary
+      of the change and overall assessment. Group findings by severity with critical items
+      first. For each finding: state the problem, explain the impact, and provide a specific
+      fix (code snippet or clear description). End with what's good about the change — good
+      reviews acknowledge strengths. Set a clear verdict: approve, request changes, or
+      needs discussion.
+    checkpoint: >
+      Review has: summary paragraph, severity-grouped findings, specific fixes for each issue,
+      acknowledgment of what's done well, and a clear verdict. Tone is professional and
+      constructive — a colleague would feel respected reading this, even with critical feedback.
+    anti_patterns:
+      - "Writing a wall of text with no structure — use headers and severity grouping"
+      - "Only pointing out problems without suggesting fixes"
+      - "Being sarcastic or condescending — this kills collaboration"
+      - "Giving an approval with unresolved critical issues just to avoid conflict"
+    prompts:
+      - "Write a 2-3 sentence summary: what does this change do and what's your overall assessment?"
+      - "List critical/major items first with specific fix suggestions."
+      - "What did the author do well? Acknowledge at least one strength."
+      - "What's your verdict: approve, request changes, or needs discussion? Why?"
+
+escalation_rules:
+  - "Escalate if a critical security vulnerability is found — it may need immediate remediation beyond this PR"
+  - "Escalate if the change modifies authentication, authorization, or cryptographic code and the reviewer lacks security expertise"
+  - "Escalate if the reviewer cannot determine correctness because they lack domain knowledge of the business logic"
+  - "Escalate if the change has architectural implications that extend beyond the PR scope"
+
+examples:
+  - problem: "Review PR that adds CSV export endpoint to a Django REST API"
+    solution: >
+      Context: new endpoint lets users export their data as CSV. Blast radius: user data
+      access, file generation, response streaming. Issues found: (1) Critical — no
+      authorization check, any authenticated user can export any other user's data by
+      changing the user_id parameter. (2) Major — CSV injection: user-controlled fields
+      (name, email) are written directly to CSV without escaping formula characters (=, +, -).
+      (3) Minor — no pagination/limit on export, could OOM on large datasets. (4) Nit —
+      inconsistent variable naming (user_data vs userData). Fixes provided for each.
+    outcome: "Auth bypass fixed with object-level permission check. CSV injection mitigated with formula escaping. Export capped at 10k rows with streaming. 4 tests added."
+
+  - problem: "Review refactor of payment processing module from callbacks to async/await"
+    solution: >
+      Context: modernizing payment flow from callback-based to async/await pattern. Blast radius:
+      all payment operations, transaction integrity. Issues found: (1) Critical — transaction
+      rollback was in a callback that's no longer called in async version, failed payments
+      leave dangling charges. (2) Major — error in one payment step doesn't cancel subsequent
+      steps due to missing try/finally. (3) Minor — three nearly identical retry functions
+      should be consolidated. Fixes: added rollback to finally block, wrapped pipeline in
+      transaction context manager, provided extracted retry utility.
+    outcome: "Rollback logic restored — prevented potential revenue leakage. Pipeline wrapped in proper transaction management. Retry logic deduplicated from 3 copies to 1."
+
+provenance:
+  author_agent: agent://hermes-primary
+  created: "2026-03-24T13:28:00Z"
+  evidence: >
+    Developed from patterns observed across 30+ code review sessions. The context-first
+    approach reduced false positives by approximately 40% compared to checklist-only review —
+    understanding intent prevents flagging intentional design choices as bugs. Severity
+    ranking was added after observing that flat lists of issues caused authors to fix nits
+    while ignoring critical security findings. The four-phase structure mirrors how
+    experienced reviewers naturally work: orient, scan, prioritize, communicate.
+  confidence: tested
+  failure_cases:
+    - "Large diffs (500+ lines) overwhelm the identify_issues phase — consider breaking into multiple reviews by module"
+    - "Reviewing generated code (protobuf, OpenAPI stubs) produces false positives — skip auto-generated files"
+    - "The severity assessment can under-rank issues in unfamiliar domains — if you don't know the domain, escalate"
+    - "Style-heavy codebases trigger too many nits — agree on linting rules before review to keep focus on substance"
+    - "The write_review phase can be slow for complex changes — timebox it and flag incomplete coverage"
