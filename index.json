@@ -1,0 +1,20 @@
+{
+  "packs": [
+    {
+      "id": "guild://general/quick-debug",
+      "name": "quick-debug",
+      "problem_class": "simple debugging",
+      "confidence": "tested",
+      "phases": 4,
+      "phase_names": [
+        "reproduce",
+        "isolate",
+        "fix",
+        "verify"
+      ],
+      "version": "1.0.0"
+    }
+  ],
+  "feedback": [],
+  "updated": "2026-03-24T13:30:05.196421+00:00"
+}

@@ -1,0 +1,38 @@
+name: Update Pack Index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packs/**'
+      - 'feedback/**'
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Generate index.json
+        env:
+          REPO_ROOT: ${{ github.workspace }}
+        run: python .github/scripts/generate_index.py
+
+      - name: Commit index.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.json
+          git diff --cached --quiet || git commit -m "chore: update index.json [skip ci]"
+          git push
