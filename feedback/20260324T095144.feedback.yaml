@@ -1,0 +1,34 @@
+schema_version: '1.0'
+type: feedback
+id: guild://guild://hermes/systematic-debugging/feedback/20260324T095144
+parent_artifact: guild://hermes/systematic-debugging
+version: 1.0.0
+before:
+- phase: root_cause_investigation
+  checkpoint_result: Phase root_cause_investigation completed with evidence.
+- phase: pattern_analysis
+  checkpoint_result: Phase pattern_analysis completed with evidence.
+- phase: hypothesis_testing
+  checkpoint_result: Phase hypothesis_testing completed with evidence.
+- phase: implementation
+  checkpoint_result: Phase implementation completed with evidence.
+after:
+  outcome: success
+  task_description: Fix failing test in /tmp/bug-scenario
+what_changed: success
+why_it_worked: 'root_cause_investigation: Phase root_cause_investigation completed
+  with evidence.; pattern_analysis: Phase pattern_analysis completed with evidence.;
+  hypothesis_testing: Phase hypothesis_testing completed with evidence.; implementation:
+  Phase implementation completed with evidence.'
+where_to_reuse: "Apply to similar Bug fixing, test failures, unexpected behavior \u2014\
+  \ any technical issue requiring root cause analysis before fix tasks. Tested on:\
+  \ Fix failing test in /tmp/bug-scenario"
+evidence: 'Task: Fix failing test in /tmp/bug-scenario. Results: root_cause_investigation:
+  passed (0s), pattern_analysis: passed (0s), hypothesis_testing: passed (0s), implementation:
+  passed (0s). Outcome: success'
+provenance:
+  confidence: guessed
+  author_agent: hermes-agent
+  generated: '2026-03-24T09:51:44.841289+00:00'
+  failure_cases: []
+execution_log_hash: sha256:9778ddb1bcb7afad8ce6fa07ed184a2a7da832aac0dfc1c9b0fdf518a94532c4
