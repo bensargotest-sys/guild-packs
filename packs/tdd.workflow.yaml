@@ -1,0 +1,160 @@
+type: workflow_pack
+schema_version: "1.0"
+version: "1.0.0"
+id: guild://hermes/test-driven-development
+problem_class: "Implementing features or fixing bugs using a test-driven development workflow — writing tests first to define correctness, then implementing the minimal code to pass"
+mental_model: >
+  TDD is a thinking tool, not just a testing technique. Writing the test first forces you
+  to define what "correct" means before you write a line of implementation. The cycle is
+  strict: Red (write a failing test that defines the requirement), Green (write the minimum
+  code to make it pass), Refactor (clean up without changing behavior). Never write
+  production code without a failing test demanding it. Never refactor while tests are red.
+  This discipline prevents gold-plating, catches regressions immediately, and produces
+  code that is testable by construction.
+required_inputs:
+  - "feature requirement, bug report, or specification to implement"
+  - "existing test framework and conventions for the project"
+  - "access to the codebase and ability to run the test suite"
+  - "acceptance criteria or definition of done"
+phases:
+  - name: understand_requirement
+    description: >
+      Before writing any code or tests, fully understand what needs to be built or fixed.
+      Break the requirement into specific, testable behaviors. Identify inputs, expected
+      outputs, edge cases, and error conditions. Define acceptance criteria as concrete
+      examples. If fixing a bug, understand the exact failure mode and expected correct
+      behavior. List the test cases you plan to write before writing any of them.
+    checkpoint: >
+      Requirement decomposed into 3-8 specific testable behaviors. Each behavior stated as
+      "given X input, expect Y output" or "when X happens, then Y should result." Edge
+      cases and error conditions identified. Test plan written as a checklist before any
+      code is written.
+    anti_patterns:
+      - "Starting to code immediately without decomposing the requirement"
+      - "Writing vague test descriptions like 'it should work correctly'"
+      - "Ignoring edge cases and error conditions in the initial plan"
+      - "Planning to write all tests at once instead of one at a time"
+    prompts:
+      - "What are the specific behaviors this feature/fix needs to exhibit? List them as given/when/then."
+      - "What are the edge cases? (empty input, null, boundary values, concurrent access, overflow)"
+      - "What should happen when things go wrong? (invalid input, network failure, timeout)"
+      - "What's the simplest behavior to test first? Start there."
+
+  - name: write_failing_test
+    description: >
+      Write exactly one test for the simplest untested behavior from your plan. The test
+      must fail when you run it — if it passes, either the behavior already exists or the
+      test is wrong. The test should be clear, focused, and test one thing. Use descriptive
+      test names that read as specifications. Run the test and confirm it fails for the
+      right reason (not a syntax error or import failure, but the actual missing behavior).
+    checkpoint: >
+      One new test written and executed. It fails with a clear, expected error — the
+      assertion fails because the behavior isn't implemented yet, NOT because of a syntax
+      error, import error, or test infrastructure problem. The test name describes the
+      behavior being tested. The test is readable as a specification.
+    anti_patterns:
+      - "Writing multiple tests at once before implementing anything"
+      - "Writing a test that passes immediately — this means you're not testing new behavior"
+      - "Test fails due to syntax or import error, not a missing behavior — fix the test first"
+      - "Testing implementation details instead of observable behavior"
+      - "Overly complex test setup that obscures what's being tested"
+    prompts:
+      - "Write a test for the single simplest behavior that isn't implemented yet."
+      - "Run the test. Does it fail? Does it fail for the RIGHT reason (missing behavior, not broken test)?"
+      - "Can you read the test name and understand what behavior it specifies?"
+      - "Is the test testing behavior (what) or implementation (how)? It should test behavior."
+
+  - name: implement_minimal
+    description: >
+      Write the absolute minimum code to make the failing test pass. Do not add features,
+      handle edge cases not yet tested, or optimize. If the test expects a function to
+      return 42, it's okay to literally return 42 — the next test will force generalization.
+      This discipline sounds extreme but it prevents over-engineering and ensures every
+      line of code is demanded by a test. Run the test after implementation to confirm it
+      passes. Run the full test suite to confirm no regressions.
+    checkpoint: >
+      The previously failing test now passes. No other tests broke. The implementation is
+      the minimum code needed — nothing more. If you wrote code that isn't required by any
+      test, delete it or write a test that requires it first. Full test suite is green.
+    anti_patterns:
+      - "Implementing more than what the current test demands"
+      - "Adding error handling for cases you haven't written tests for yet"
+      - "Optimizing before you have passing tests — premature optimization in TDD is doubly wasteful"
+      - "Not running the full suite — your change might break something unrelated"
+      - "Writing 'real' implementation instead of the simplest thing that passes"
+    prompts:
+      - "What's the absolute minimum code to make this one test pass?"
+      - "Did you add anything not required by a failing test? Remove it or write the test first."
+      - "Run the full test suite. Does everything pass, including pre-existing tests?"
+      - "Is there a simpler implementation that would still pass the test?"
+
+  - name: refactor_and_verify
+    description: >
+      With all tests green, improve the code without changing behavior. Remove duplication,
+      improve naming, extract functions, simplify conditionals. Run tests after every
+      refactoring step — if a test breaks, your refactor changed behavior and you need to
+      undo it. Once clean, return to the write_failing_test phase for the next behavior
+      on your plan. Repeat the cycle until all planned behaviors are implemented. When the
+      plan is complete, do a final review of test coverage and code quality.
+    checkpoint: >
+      Code refactored: no duplication, clear naming, functions focused on single tasks.
+      All tests still pass after refactoring — behavior is preserved. If more behaviors
+      remain in the plan, ready to loop back to write_failing_test. If plan is complete,
+      full test suite green and coverage reviewed.
+    anti_patterns:
+      - "Refactoring while tests are failing — always get to green first"
+      - "Adding new behavior during refactor — that requires a new failing test"
+      - "Skipping the refactor phase because 'it works' — tech debt accumulates fast"
+      - "Large refactors in one step — make small changes and run tests between each"
+      - "Not looping back — TDD is iterative, one test at a time through the full plan"
+    prompts:
+      - "Is there any duplication in the implementation that can be extracted?"
+      - "Are function and variable names clear? Would a reader understand the code without comments?"
+      - "Run the tests. Still green? Good. If not, undo the last refactor step."
+      - "What's the next behavior on the plan? Loop back to write_failing_test for it."
+
+escalation_rules:
+  - "Escalate if the test framework doesn't support testing the required behavior (e.g., need integration test infrastructure)"
+  - "Escalate if requirements are ambiguous and test cases cannot be defined without clarification"
+  - "Escalate if existing code is untestable (tightly coupled, no dependency injection) and requires architectural changes first"
+  - "Escalate if the full test suite takes too long to run frequently — need test infrastructure improvement"
+
+examples:
+  - problem: "Implement a URL shortener service with custom alias support"
+    solution: >
+      Requirement phase: decomposed into 6 behaviors — shorten URL returns short code, redirect
+      resolves to original, custom alias works, duplicate alias rejected, invalid URL rejected,
+      expired links return 404. Test plan ordered simplest-first. Cycle 1: test that shorten()
+      returns a string code, implemented with hardcoded return. Cycle 2: test that resolve()
+      returns original URL, implemented with dictionary storage. Cycle 3-6: custom alias,
+      validation, expiry. Each cycle: one failing test, minimal implementation, refactor.
+      Extracted storage interface during refactor phase 4.
+    outcome: "6 behaviors implemented in 6 TDD cycles. 14 tests total (6 happy path, 5 edge cases, 3 error cases). Storage abstraction emerged naturally from refactoring, not upfront design."
+
+  - problem: "Fix bug where discount calculation applies twice on subscription renewal"
+    solution: >
+      Requirement phase: identified correct behavior — discount applies once on initial signup,
+      renewal uses base price. Wrote failing test: renew_subscription() should charge base_price
+      not discounted_price. Test failed confirming the bug. Minimal fix: added is_renewal flag
+      to skip discount application. Test passed. Refactored: extracted pricing logic into
+      calculate_charge(subscription, is_renewal) function. Added 3 more tests: renewal with
+      expired discount, renewal with price change, renewal with grandfathered rate.
+    outcome: "Bug fixed with one targeted change. 4 regression tests ensure discount logic cannot silently break again. Pricing logic extracted to testable pure function."
+
+provenance:
+  author_agent: agent://hermes-primary
+  created: "2026-03-24T13:28:00Z"
+  evidence: >
+    Applied across 15 implementation tasks ranging from utility functions to API endpoints.
+    Tasks using this TDD workflow had 70% fewer post-merge bugs compared to implementation-first
+    approach. The understand_requirement phase was added after 3 early sessions where tests
+    were written ad-hoc and missed critical edge cases. The strict "minimal implementation"
+    discipline was the hardest to follow but produced the most testable code — agents
+    naturally want to implement the full solution, and this phase forces incremental progress.
+  confidence: tested
+  failure_cases:
+    - "UI/visual code is hard to TDD — behavior tests work but pixel-perfect layout testing requires different tools"
+    - "Exploratory/prototype work conflicts with TDD discipline — when you don't know what you're building, strict TDD adds friction"
+    - "Legacy code without test infrastructure requires significant setup before the first test can even run"
+    - "Performance-sensitive code may need optimization that tests don't drive — supplement with benchmarks"
+    - "The minimal implementation phase can feel artificially slow — trust the process, it prevents over-engineering"
