@@ -1,0 +1,17 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://test/pii-test
+problem_class: testing
+mental_model: Connect to [REDACTED:IP address]
+phases:
+- name: phase1
+  description: Test with [REDACTED:email address] credentials
+provenance:
+  confidence: tested
+  evidence: Tested on [REDACTED:user home path] using [REDACTED:OpenAI API key]
+  failure_cases:
+  - timeout
+required_inputs:
+- input1
+escalation_rules:
+- rule1
