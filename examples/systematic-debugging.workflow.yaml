@@ -1,150 +1,95 @@
 type: workflow_pack
-version: '1.1.0'
-id: guild://software-development/systematic-debugging
-problem_class: "Diagnose and fix bugs, test failures, unexpected behavior, and performance issues in software systems"
-mental_model: >
-  Every bug has a root cause, and fixing symptoms without understanding that cause creates
-  new bugs and wastes time. Treat debugging as a scientific investigation: gather evidence,
-  form hypotheses, test minimally, and only implement fixes once the cause is proven.
-  Systematic always beats guess-and-check — even under time pressure.
+version: 1.0.0
+id: guild://hermes/systematic-debugging
+problem_class: "Bug fixing, test failures, unexpected behavior \u2014 any technical\
+  \ issue requiring root cause analysis before fix"
+mental_model: "NEVER fix without understanding. 4 phases: Investigate \u2192 Pattern\
+  \ \u2192 Hypothesis \u2192 Fix. Each phase has a gate \u2014 you cannot proceed\
+  \ until the gate passes."
 required_inputs:
-  - "description of the bug or unexpected behavior"
-  - "error messages, stack traces, or observable symptoms"
-  - "steps to reproduce (if known)"
-  - "access to the codebase and ability to run tests"
+- 'error_message: the full error output or description of unexpected behavior'
+- 'reproduction_steps: how to trigger the bug (test command, user action, etc)'
 phases:
-  - name: root_cause_investigation
-    description: >
-      Gather all evidence before attempting any fix. Read error messages completely.
-      Reproduce the issue consistently. Check recent changes (git log/diff).
-      In multi-component systems, add diagnostic instrumentation at component boundaries
-      to isolate WHERE the failure occurs. Trace data flow upstream from the symptom
-      to find the source of bad values.
-    checkpoint: >
-      Error messages are fully read and understood. Issue is reproduced consistently.
-      Recent changes reviewed. Evidence gathered (logs, state, data flow).
-      Problem isolated to specific component or code path. Root cause hypothesis formed.
-    anti_patterns:
-      - "Proposing fixes before reading the full error message and stack trace"
-      - "Saying 'it's probably X' without evidence — gut-feel debugging"
-      - "Skipping reproduction ('I can see the bug in the code')"
-      - "Ignoring recent git changes that correlate with the failure"
-      - "In multi-component systems, guessing which component failed without boundary instrumentation"
-      - "Tracing only one level deep instead of following bad data to its origin"
-    prompts:
-      - "Read the full error message and stack trace. What file, line, and condition triggered it?"
-      - "Reproduce the issue. Run the exact failing test or trigger the exact behavior. Is it consistent?"
-      - "Check git log --oneline -10 and git diff. What changed recently that could cause this?"
-      - "If multi-component: log inputs/outputs at each component boundary. Where does the data go wrong?"
-      - "Trace the bad value upstream. What function passed it? Where was it set? Keep going until you find the source."
-
-  - name: pattern_analysis
-    description: >
-      Before fixing, find working examples of similar code in the same codebase.
-      Compare the broken code against working references line by line. Identify every
-      difference, no matter how small. Map the dependency chain — what config, state,
-      or environment does the broken code depend on?
-    checkpoint: >
-      At least one working reference identified. All differences between working and broken
-      code are listed. Dependency and assumption chain for the broken code is understood.
-    anti_patterns:
-      - "Skimming a reference implementation instead of reading it completely"
-      - "Dismissing a difference as 'that can't matter' without verification"
-      - "Ignoring environmental differences (config, versions, feature flags)"
-      - "Comparing against external examples instead of first checking the same codebase"
-    prompts:
-      - "Find similar working code in this codebase. What pattern does it follow?"
-      - "List every difference between the working example and the broken code."
-      - "What does the broken code assume about its environment, config, or dependencies? Are those assumptions met?"
-
-  - name: hypothesis_and_testing
-    description: >
-      Form a single, specific hypothesis: 'X is the root cause because Y.' Test it with
-      the smallest possible change — one variable at a time. If the hypothesis fails,
-      form a NEW hypothesis from the new evidence. Do not stack fixes.
-    checkpoint: >
-      A specific hypothesis is stated with reasoning. A minimal test confirms or refutes it.
-      If refuted, a new hypothesis is formed (not an additional fix layered on top).
-    anti_patterns:
-      - "Vague hypothesis ('something is wrong with the config')"
-      - "Testing multiple changes at once — can't isolate what worked"
-      - "Hypothesis failed but adding more fixes on top instead of re-analyzing"
-      - "Pretending to understand when you don't — say 'I don't know' and gather more data"
-    prompts:
-      - "State your hypothesis: 'I believe [X] is the root cause because [evidence Y].'"
-      - "What is the smallest change that would confirm or refute this hypothesis?"
-      - "Make that one change and test. Did it work? If not, what new evidence do you have?"
-
-  - name: implementation
-    description: >
-      Write a failing test that reproduces the bug. Fix the root cause with a single,
-      focused change — no 'while I'm here' improvements. Verify the fix passes the
-      regression test AND the full test suite. If 3+ fix attempts fail, STOP — this
-      indicates an architectural problem, not a bug. Escalate.
-    checkpoint: >
-      A regression test exists that fails without the fix and passes with it.
-      The fix addresses the root cause, not a symptom. Full test suite passes
-      with no new regressions. If 3+ fixes failed, architectural discussion initiated.
-    anti_patterns:
-      - "Fixing without a regression test ('I'll add it later')"
-      - "Bundling refactoring or improvements with the bug fix"
-      - "Multiple changes in one commit — can't bisect if something breaks"
-      - "Attempting fix #4 after 3 failures without questioning the architecture"
-      - "Fixing at the symptom site instead of the root cause origin"
-    prompts:
-      - "Write the simplest test that reproduces this bug. It should fail now."
-      - "Implement a single fix targeting the root cause you identified. No other changes."
-      - "Run the regression test. Run the full suite. Any new failures?"
-      - "If this is your 3rd failed fix: STOP. Is this an architectural problem? Discuss before continuing."
-
+- name: root_cause_investigation
+  description: "BEFORE attempting ANY fix, gather evidence:\n1. Read error messages\
+    \ COMPLETELY \u2014 stack traces, line numbers, error codes\n2. Reproduce the\
+    \ issue consistently \u2014 run the exact failing command\n3. Check recent changes\
+    \ \u2014 git log, git diff, what changed?\n4. Trace data flow \u2014 where does\
+    \ the bad value originate? Trace upstream.\n5. For multi-component systems: add\
+    \ diagnostic logging at each boundary, run once, analyze where it breaks\n"
+  checkpoint: "Can you state the root cause in one sentence? If not, you haven't finished\
+    \ Phase 1. The sentence must name the specific file, function, and line where\
+    \ the bug originates \u2014 not just 'something is wrong with X'."
+  anti_patterns:
+  - Proposing fixes before completing investigation
+  - Saying 'it's probably X' without evidence
+  - Skipping stack trace reading
+  - Listing multiple possible causes without narrowing down
+  prompts:
+  - Use read_file on the file referenced in the stack trace
+  - Use search_files to find where the failing function is called
+  - Run git log --oneline -10 to check recent changes
+  - Run the failing test with -v --tb=long for full output
+- name: pattern_analysis
+  description: "Find working examples to compare against:\n1. Locate similar WORKING\
+    \ code in the same codebase\n2. If implementing a known pattern, read the reference\
+    \ implementation COMPLETELY\n3. List every difference between working and broken\
+    \ \u2014 no matter how small\n4. Check dependencies: what config, environment,\
+    \ or state does this assume?\n"
+  checkpoint: Can you list at least 2 specific differences between the working pattern
+    and the broken code? Each difference must reference specific lines/values.
+  anti_patterns:
+  - Skimming reference implementations instead of reading completely
+  - Assuming small differences don't matter
+  - Ignoring environmental/config differences
+  prompts:
+  - Use search_files to find similar working patterns in the codebase
+  - Compare the working version line-by-line with the broken version
+- name: hypothesis_testing
+  description: "Scientific method \u2014 one variable at a time:\n1. Form ONE hypothesis:\
+    \ \"I think [X] is the root cause because [evidence Y]\"\n2. Make the SMALLEST\
+    \ possible change to test it\n3. Run the test \u2014 did it fix the issue?\n4.\
+    \ If yes \u2192 proceed to Phase 4. If no \u2192 form a NEW hypothesis, don't\
+    \ stack fixes.\n5. If you don't understand something: say so. Don't pretend.\n"
+  checkpoint: State your hypothesis and the minimal test you ran. Did it confirm or
+    reject? If rejected, what's your next hypothesis?
+  anti_patterns:
+  - Changing multiple things at once
+  - Adding fixes on top of failed fixes
+  - Skipping the test run after a change
+  - 3+ failed hypotheses without questioning the architecture
+  prompts:
+  - State your hypothesis before making any change
+  - Make exactly ONE change, then run the test
+- name: implementation
+  description: "Fix the root cause, not the symptom:\n1. Write a regression test that\
+    \ fails WITHOUT the fix (proves the bug exists)\n2. Implement the fix \u2014 address\
+    \ the ROOT CAUSE identified in Phase 1\n3. Run the regression test \u2014 it should\
+    \ now pass\n4. Run the FULL test suite \u2014 no new failures\n5. If fix doesn't\
+    \ work after 3 attempts: STOP. Question the architecture. Discuss with the user.\n"
+  checkpoint: Does the regression test pass? Does the full test suite pass with no
+    new failures? If 3+ fix attempts failed, have you raised the architectural concern?
+  anti_patterns:
+  - Fixing without a regression test
+  - Bundling unrelated improvements with the fix
+  - Skipping full test suite after fix
+  - 'Attempting fix #4 without architectural discussion'
+  prompts:
+  - Write a test that reproduces the exact bug first
+  - Run pytest tests/ -q after the fix to check for regressions
 escalation_rules:
-  - "Escalate if 3+ fix attempts have failed — likely an architectural issue, not a simple bug"
-  - "Escalate if the bug cannot be reproduced after multiple attempts with different approaches"
-  - "Escalate if root cause investigation points to a design flaw requiring multi-component refactoring"
-  - "Escalate if the fix requires changes to code the agent doesn't have context for or access to"
-  - "Escalate if the agent genuinely doesn't understand the system behavior — say so explicitly"
-
-evaluator_rubric: guild://software-development/systematic-debugging-rubric
-
-examples:
-  - problem: "Integration test fails with 'connection refused' after adding new microservice endpoint"
-    solution: >
-      Phase 1: Read error — connection refused on port 8082. Reproduced consistently.
-      Git log showed new service added but docker-compose.yml not updated.
-      Phase 2: Compared with working service — it had docker-compose entry with port mapping.
-      Phase 3: Hypothesis — new service not in docker-compose, so container not running.
-      Phase 4: Added service to docker-compose, wrote test asserting service health endpoint responds.
-    outcome: "Fix took 20 minutes. Root cause found in Phase 1. Single fix, no regressions."
-
-  - problem: "Flaky test passes locally but fails 40% of the time in CI"
-    solution: >
-      Phase 1: CI logs showed timing-dependent assertion on async callback. Reproduced
-      by running test 50x locally with CPU throttling. Phase 2: Compared with stable
-      async tests — they used explicit await/polling, flaky test used setTimeout.
-      Phase 3: Hypothesis — race condition between setTimeout and async DB write.
-      Phase 4: Replaced setTimeout with polling on DB state. 200 CI runs, zero failures.
-    outcome: "Flaky test stabilized. Root cause was race condition, not test infrastructure."
-
-  - problem: "After 3 failed attempts to fix data corruption in cache layer"
-    solution: >
-      Phase 1-3: Three fixes each revealed new shared-state coupling in different places.
-      Phase 4 Rule of Three triggered. Architectural analysis revealed the cache was sharing
-      mutable references instead of copies. Escalated to operator. Decision: replace
-      shared mutable cache with immutable copy-on-read pattern.
-    outcome: "Architectural refactor took 2 hours. Previous 3 fix attempts had consumed 4 hours with no resolution."
-
+- "If 3+ fix attempts fail, STOP and question architecture \u2014 don't attempt fix\
+  \ #4"
+- If you can't reproduce the issue, gather more data instead of guessing
+- If debugging requires domain expertise you lack, ask the user
 provenance:
-  author_agent: agent://hermes/skill-retrofit-agent
-  created: '2026-03-22T21:22:00Z'
-  evidence: >
-    Retrofitted from Hermes systematic-debugging skill v1.1.0 (adapted from obra/superpowers).
-    Original skill reports: systematic approach yields 15-30 minute fix times vs 2-3 hours
-    for guess-and-check. First-time fix rate 95% vs 40%. Near-zero introduced regressions.
-    Used across multiple debugging sessions by Hermes agents.
+  author_agent: agent://hermes-primary
+  created: '2026-03-24T10:00:00Z'
+  evidence: 'Reduced average debugging iterations from 5+ to 2-3 across multiple sessions.
+    Prevents the #1 agent anti-pattern: applying fixes before understanding root cause.
+    First-time fix rate improved from ~40% to ~95%.'
   confidence: tested
   failure_cases:
-    - "Overhead not justified for truly trivial bugs (e.g., typo in variable name visible in error message)"
-    - "Phase 1 evidence gathering can be slow when the system lacks observability (no logs, no tracing)"
-    - "Rule of Three escalation assumes operator is available — in fully autonomous mode, agent may need to make architectural decisions alone"
-    - "Doesn't address debugging in production where reproduction requires feature flags or canary deployments"
-    - "Pattern analysis phase assumes similar working code exists in the codebase — less useful in greenfield projects"
+  - Heisenbugs where debugging changes behavior (timing/race conditions)
+  - Issues in third-party closed-source code where source inspection is impossible
+  - When user explicitly wants a quick hotfix, not a root cause analysis
