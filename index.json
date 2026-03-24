@@ -1,6 +1,20 @@
 {
   "packs": [
     {
+      "id": "guild://hermes/code-review",
+      "name": "code-review",
+      "problem_class": "Reviewing code changes (diffs, PRs, or files) for bugs, security vulnerabilities, and quality issues \u2014 producing actionable, severity-ranked feedback",
+      "confidence": "tested",
+      "phases": 4,
+      "phase_names": [
+        "understand_context",
+        "identify_issues",
+        "assess_severity",
+        "write_review"
+      ],
+      "version": "1.0.0"
+    },
+    {
       "id": "guild://general/quick-debug",
       "name": "quick-debug",
       "problem_class": "simple debugging",
@@ -13,8 +27,36 @@
         "verify"
       ],
       "version": "1.0.0"
+    },
+    {
+      "id": "guild://hermes/systematic-debugging",
+      "name": "systematic-debugging",
+      "problem_class": "Bug fixing, test failures, unexpected behavior \u2014 any technical issue requiring root cause analysis before fix",
+      "confidence": "tested",
+      "phases": 4,
+      "phase_names": [
+        "root_cause_investigation",
+        "pattern_analysis",
+        "hypothesis_testing",
+        "implementation"
+      ],
+      "version": "1.0.0"
+    },
+    {
+      "id": "guild://hermes/test-driven-development",
+      "name": "test-driven-development",
+      "problem_class": "Implementing features or fixing bugs using a test-driven development workflow \u2014 writing tests first to define correctness, then implementing the minimal code to pass",
+      "confidence": "tested",
+      "phases": 4,
+      "phase_names": [
+        "understand_requirement",
+        "write_failing_test",
+        "implement_minimal",
+        "refactor_and_verify"
+      ],
+      "version": "1.0.0"
     }
   ],
   "feedback": [],
-  "updated": "2026-03-24T13:30:05.196421+00:00"
+  "updated": "2026-03-24T13:33:50.619550+00:00"
 }
