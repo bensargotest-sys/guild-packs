@@ -1,0 +1,56 @@
+name: Validate Packs
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Run pack validation
+        id: validate
+        run: |
+          python .github/scripts/validate_packs.py > validation_output.txt 2>&1
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          cat validation_output.txt
+        continue-on-error: true
+
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body;
+            try {
+              const output = fs.readFileSync('validation_output.txt', 'utf8');
+              const exitCode = '${{ steps.validate.outputs.exit_code }}';
+              const icon = exitCode === '0' ? '✅' : '❌';
+              body = `${icon} **Pack Validation Results**\n\n\`\`\`\n${output}\n\`\`\``;
+            } catch (e) {
+              body = '⚠️ **Pack Validation**: Could not read results.';
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Fail if validation failed
+        if: steps.validate.outputs.exit_code != '0'
+        run: exit 1
