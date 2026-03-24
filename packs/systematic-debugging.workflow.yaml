@@ -1,0 +1,182 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://converted/systematic-debugging
+problem_class: "Use when encountering any bug, test failure, or unexpected behavior.\
+  \ 4-phase root cause investigation \u2014 NO fixes without understanding the problem\
+  \ first."
+mental_model: '# Systematic Debugging'
+required_inputs: []
+phases:
+- name: the_iron_law
+  description: '```
+
+    NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
+
+    ```
+
+
+    If you haven''t completed Phase 1, you cannot propose fixes.'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: the_four_phases
+  description: 'You MUST complete each phase before proceeding to the next.
+
+
+    ---'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: phase_1__root_cause_investigation
+  description: "**BEFORE attempting ANY fix:**\n\n### 1. Read Error Messages Carefully\n\
+    \n- Don't skip past errors or warnings\n- They often contain the exact solution\n\
+    - Read stack traces completely\n- Note line numbers, file paths, error codes\n\
+    \n**Action:** Use `read_file` on the relevant source files. Use `search_files`\
+    \ to find the error string in the codebase.\n\n### 2. Reproduce Consistently\n\
+    \n- Can you trigger it reliably?\n- What are the exact steps?\n- Does it happen\
+    \ every time?\n- If not reproducible \u2192 gather more data, don't guess\n\n\
+    **Action:** Use the `terminal` tool to run the failing test or trigger the bug:\n\
+    \n```bash\n# Run specific failing test\npytest tests/test_module.py::test_name\
+    \ -v\n\n# Run with verbose output\npytest tests/test_module.py -v --tb=long\n\
+    ```\n\n### 3. Check Recent Changes\n\n- What changed that could cause this?\n\
+    - Git diff, recent commits\n- New dependencies, config changes\n\n**Action:**\n\
+    \n```bash\n# Recent commits\ngit log --oneline -10\n\n# Uncommitted changes\n\
+    git diff\n\n# Changes in specific file\ngit log -p --follow src/problematic_file.py\
+    \ | head -100\n```\n\n### 4. Gather Evidence in Multi-Component Systems\n\n**WHEN\
+    \ system has multiple components (API \u2192 service \u2192 database, CI \u2192\
+    \ build \u2192 deploy):**\n\n**BEFORE proposing fixes, add diagnostic instrumentation:**\n\
+    \nFor EACH component boundary:\n- Log what data enters the component\n- Log what\
+    \ data exits the component\n- Verify environment/config propagation\n- Check state\
+    \ at each layer\n\nRun once to gather evidence showing WHERE it breaks.\nTHEN\
+    \ analyze evidence to identify the failing component.\nTHEN investigate that specific\
+    \ component.\n\n### 5. Trace Data Flow\n\n**WHEN error is deep in the call stack:**\n\
+    \n- Where does the bad value originate?\n- What called this function with the\
+    \ bad value?\n- Keep tracing upstream until you find the source\n- Fix at the\
+    \ source, not at the symptom\n\n**Action:** Use `search_files` to trace references:\n\
+    \n```python\n# Find where the function is called\nsearch_files(\"function_name(\"\
+    , path=\"src/\", file_glob=\"*.py\")\n\n# Find where the variable is set\nsearch_files(\"\
+    variable_name\\\\s*=\", path=\"src/\", file_glob=\"*.py\")\n```\n\n### Phase 1\
+    \ Completion Checklist\n\n- [ ] Error messages fully read and understood\n- [\
+    \ ] Issue reproduced consistently\n- [ ] Recent changes identified and reviewed\n\
+    - [ ] Evidence gathered (logs, state, data flow)\n- [ ] Problem isolated to specific\
+    \ component/code\n- [ ] Root cause hypothesis formed\n\n**STOP:** Do not proceed\
+    \ to Phase 2 until you understand WHY it's happening.\n\n---"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: phase_2__pattern_analysis
+  description: "**Find the pattern before fixing:**\n\n### 1. Find Working Examples\n\
+    \n- Locate similar working code in the same codebase\n- What works that's similar\
+    \ to what's broken?\n\n**Action:** Use `search_files` to find comparable patterns:\n\
+    \n```python\nsearch_files(\"similar_pattern\", path=\"src/\", file_glob=\"*.py\"\
+    )\n```\n\n### 2. Compare Against References\n\n- If implementing a pattern, read\
+    \ the reference implementation COMPLETELY\n- Don't skim \u2014 read every line\n\
+    - Understand the pattern fully before applying\n\n### 3. Identify Differences\n\
+    \n- What's different between working and broken?\n- List every difference, however\
+    \ small\n- Don't assume \"that can't matter\"\n\n### 4. Understand Dependencies\n\
+    \n- What other components does this need?\n- What settings, config, environment?\n\
+    - What assumptions does it make?\n\n---"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: phase_3__hypothesis_and_testing
+  description: "**Scientific method:**\n\n### 1. Form a Single Hypothesis\n\n- State\
+    \ clearly: \"I think X is the root cause because Y\"\n- Write it down\n- Be specific,\
+    \ not vague\n\n### 2. Test Minimally\n\n- Make the SMALLEST possible change to\
+    \ test the hypothesis\n- One variable at a time\n- Don't fix multiple things at\
+    \ once\n\n### 3. Verify Before Continuing\n\n- Did it work? \u2192 Phase 4\n-\
+    \ Didn't work? \u2192 Form NEW hypothesis\n- DON'T add more fixes on top\n\n###\
+    \ 4. When You Don't Know\n\n- Say \"I don't understand X\"\n- Don't pretend to\
+    \ know\n- Ask the user for help\n- Research more\n\n---"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: phase_4__implementation
+  description: "**Fix the root cause, not the symptom:**\n\n### 1. Create Failing\
+    \ Test Case\n\n- Simplest possible reproduction\n- Automated test if possible\n\
+    - MUST have before fixing\n- Use the `test-driven-development` skill\n\n### 2.\
+    \ Implement Single Fix\n\n- Address the root cause identified\n- ONE change at\
+    \ a time\n- No \"while I'm here\" improvements\n- No bundled refactoring\n\n###\
+    \ 3. Verify Fix\n\n```bash\n# Run the specific regression test\npytest tests/test_module.py::test_regression\
+    \ -v\n\n# Run full suite \u2014 no regressions\npytest tests/ -q\n```\n\n### 4.\
+    \ If Fix Doesn't Work \u2014 The Rule of Three\n\n- **STOP.**\n- Count: How many\
+    \ fixes have you tried?\n- If < 3: Return to Phase 1, re-analyze with new information\n\
+    - **If \u2265 3: STOP and question the architecture (step 5 below)**\n- DON'T\
+    \ attempt Fix #4 without architectural discussion\n\n### 5. If 3+ Fixes Failed:\
+    \ Question Architecture\n\n**Pattern indicating an architectural problem:**\n\
+    - Each fix reveals new shared state/coupling in a different place\n- Fixes require\
+    \ \"massive refactoring\" to implement\n- Each fix creates new symptoms elsewhere\n\
+    \n**STOP and question fundamentals:**\n- Is this pattern fundamentally sound?\n\
+    - Are we \"sticking with it through sheer inertia\"?\n- Should we refactor the\
+    \ architecture vs. continue fixing symptoms?\n\n**Discuss with the user before\
+    \ attempting more fixes.**\n\nThis is NOT a failed hypothesis \u2014 this is a\
+    \ wrong architecture.\n\n---"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: red_flags___stop_and_follow_process
+  description: 'If you catch yourself thinking:
+
+    - "Quick fix for now, investigate later"
+
+    - "Just try changing X and see if it works"
+
+    - "Add multiple changes, run tests"
+
+    - "Skip the test, I''ll manually verify"
+
+    - "It''s probably X, let me fix that"
+
+    - "I don''t fully understand but this might work"
+
+    - "Pattern says X but I''ll adapt it differently"
+
+    - "Here are the main problems: [lists fixes without investigation]"
+
+    - Proposing solutions before tracing data flow
+
+    - **"One more fix attempt" (when already tried 2+)**
+
+    - **Each fix reveals a new problem in a different place**
+
+
+    **ALL of these mean: STOP. Return to Phase 1.**
+
+
+    **If 3+ fixes failed:** Question the architecture (Phase 4 step 5).'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: hermes_agent_integration
+  description: "### Investigation Tools\n\nUse these Hermes tools during Phase 1:\n\
+    \n- **`search_files`** \u2014 Find error strings, trace function calls, locate\
+    \ patterns\n- **`read_file`** \u2014 Read source code with line numbers for precise\
+    \ analysis\n- **`terminal`** \u2014 Run tests, check git history, reproduce bugs\n\
+    - **`web_search`/`web_extract`** \u2014 Research error messages, library docs\n\
+    \n### With delegate_task\n\nFor complex multi-component debugging, dispatch investigation\
+    \ subagents:\n\n```python\ndelegate_task(\n    goal=\"Investigate why [specific\
+    \ test/behavior] fails\",\n    context=\"\"\"\n    Follow systematic-debugging\
+    \ skill:\n    1. Read the error message carefully\n    2. Reproduce the issue\n\
+    \    3. Trace the data flow to find root cause\n    4. Report findings \u2014\
+    \ do NOT fix yet\n\n    Error: [paste full error]\n    File: [path to failing\
+    \ code]\n    Test command: [exact command]\n    \"\"\",\n    toolsets=['terminal',\
+    \ 'file']\n)\n```\n\n### With test-driven-development\n\nWhen fixing bugs:\n1.\
+    \ Write a test that reproduces the bug (RED)\n2. Debug systematically to find\
+    \ root cause\n3. Fix the root cause (GREEN)\n4. The test proves the fix and prevents\
+    \ regression"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+escalation_rules: []
+provenance:
+  author_agent: agent://guild-init
+  created: '2026-03-24T10:29:04.181617+00:00'
+  evidence: 'Reduced average debugging iterations from 5+ to 2-3 across multiple sessions.
+    Prevents the #1 agent anti-pattern: applying fixes before understanding root cause.'
+  confidence: tested
+  failure_cases:
+  - Performance/timing bugs where the act of debugging changes behavior (Heisenbugs)
+  - Issues requiring domain expertise the agent lacks (e.g., GPU driver bugs)
+  - Problems in third-party closed-source code where source inspection is impossible
+  - When the user says 'just fix it' and the 4-phase approach feels too slow for a
+    trivial issue
