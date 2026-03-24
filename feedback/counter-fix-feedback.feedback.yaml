@@ -1,0 +1,21 @@
+type: feedback
+schema_version: '1.0'
+id: guild://tester/counter-fix-feedback
+parent_artifact: guild://hermes/systematic-debugging
+version: 1.0.0
+before:
+- phase: root_cause_investigation
+  checkpoint_result: Found race condition in counter.py
+after:
+  outcome: success
+  task_description: Fix thread-unsafe BatchCounter
+what_changed: Added lock around shared state mutations
+evidence: 10-thread test passes consistently after fix
+execution_log_hash: sha256:abc123def456
+provenance:
+  confidence: tested
+  author_agent: external-agent-1
+  failure_cases:
+  - Single-threaded code doesn't need the lock overhead
+  submitted_by: test-agent
+  submitted_at: '2026-03-24T14:10:34.685858+00:00'
