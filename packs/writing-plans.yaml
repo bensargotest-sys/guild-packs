@@ -1,0 +1,289 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/writing-plans
+problem_class: Use when you have a spec or requirements for a multi-step task. Creates
+  comprehensive implementation plans with bite-sized tasks, exact file paths, and
+  complete code examples.
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: bite_sized_task_granularity
+  description: '**Each task = 2-5 minutes of focused work.**
+
+
+    Every step is one action:
+
+    - "Write the failing test" — step
+
+    - "Run it to make sure it fails" — step
+
+    - "Implement the minimal code to make the test pass" — step
+
+    - "Run the tests and make sure they pass" — step
+
+    - "Commit" — step
+
+
+    **Too big:**
+
+    ```markdown
+
+    ### Task 1: Build authentication system
+
+    [50 lines of code across 5 files]
+
+    ```
+
+
+    **Right size:**
+
+    ```markdown
+
+    ### Task 1: Create User model with email field
+
+    [10 lines, 1 file]
+
+
+    ### Task 2: Add credential hash field to User
+
+    [8 lines, 1 file]
+
+
+    ### Task 3: Create credential hashing utility
+
+    [15 lines, 1 file]
+
+    ```'
+  checkpoint: Verify bite-sized task granularity is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: plan_document_structure
+  description: "### Header (Required)\n\nEvery plan MUST start with:\n\n```markdown\n\
+    # [Feature Name] Implementation Plan\n\n> **For Hermes:** Use subagent-driven-development\
+    \ skill to implement this plan task-by-task.\n\n**Goal:** [One sentence describing\
+    \ what this builds]\n\n**Architecture:** [2-3 sentences about approach]\n\n**Tech\
+    \ Stack:** [Key technologies/libraries]\n\n---\n```\n\n### Task Structure\n\n\
+    Each task follows this format:\n\n````markdown\n### Task N: [Descriptive Name]\n\
+    \n**Objective:** What this task accomplishes (one sentence)\n\n**Files:**\n- Create:\
+    \ `exact/path/to/new_file.py`\n- Modify: `exact/path/to/existing.py:45-67` (line\
+    \ numbers if known)\n- Test: `tests/path/to/test_file.py`\n\n**Step 1: Write failing\
+    \ test**\n\n```python\ndef test_specific_behavior():\n    result = function(input)\n\
+    \    assert result == expected\n```\n\n**Step 2: Run test to verify failure**\n\
+    \nRun: `pytest tests/path/test.py::test_specific_behavior -v`\nExpected: FAIL\
+    \ — \"function not defined\"\n\n**Step 3: Write minimal implementation**\n\n```python\n\
+    def function(input):\n    return expected\n```\n\n**Step 4: Run test to verify\
+    \ pass**\n\nRun: `pytest tests/path/test.py::test_specific_behavior -v`\nExpected:\
+    \ PASS\n\n**Step 5: Commit**\n\n```bash\ngit add tests/path/test.py src/path/file.py\n\
+    git commit -m \"feat: add specific feature\"\n```\n````"
+  checkpoint: Verify plan document structure is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: writing_process
+  description: '### Step 1: Understand Requirements
+
+
+    Read and understand:
+
+    - Feature requirements
+
+    - Design documents or user description
+
+    - Acceptance criteria
+
+    - Constraints
+
+
+    ### Step 2: Explore the Codebase
+
+
+    Use Hermes tools to understand the project:
+
+
+    ```python
+
+    # Understand project structure
+
+    search_files("*.py", target="files", path="src/")
+
+
+    # Look at similar features
+
+    search_files("similar_pattern", path="src/", file_glob="*.py")
+
+
+    # Check existing tests
+
+    search_files("*.py", target="files", path="tests/")
+
+
+    # Read key files
+
+    read_file("src/app.py")
+
+    ```
+
+
+    ### Step 3: Design Approach
+
+
+    Decide:
+
+    - Architecture pattern
+
+    - File organization
+
+    - Dependencies needed
+
+    - Testing strategy
+
+
+    ### Step 4: Write Tasks
+
+
+    Create tasks in order:
+
+    1. Setup/infrastructure
+
+    2. Core functionality (TDD for each)
+
+    3. Edge cases
+
+    4. Integration
+
+    5. Cleanup/documentation
+
+
+    ### Step 5: Add Complete Details
+
+
+    For each task, include:
+
+    - **Exact file paths** (not "the config file" but `src/config/settings.py`)
+
+    - **Complete code examples** (not "add validation" but the actual code)
+
+    - **Exact commands** with expected output
+
+    - **Verification steps** that prove the task works
+
+
+    ### Step 6: Review the Plan
+
+
+    Check:
+
+    - [ ] Tasks are sequential and logical
+
+    - [ ] Each task is bite-sized (2-5 min)
+
+    - [ ] File paths are exact
+
+    - [ ] Code examples are complete (copy-pasteable)
+
+    - [ ] Commands are exact with expected output
+
+    - [ ] No missing context
+
+    - [ ] DRY, YAGNI, TDD principles applied
+
+
+    ### Step 7: Save the Plan
+
+
+    ```bash
+
+    mkdir -p docs/plans
+
+    # Save plan to docs/plans/YYYY-MM-DD-feature-name.md
+
+    git add docs/plans/
+
+    git commit -m "docs: add implementation plan for [feature]"
+
+    ```'
+  checkpoint: Verify writing process is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: principles
+  description: "### DRY (Don't Repeat Yourself)\n\n**Bad:** Copy-paste validation\
+    \ in 3 places\n**Good:** Extract validation function, use everywhere\n\n### YAGNI\
+    \ (You Aren't Gonna Need It)\n\n**Bad:** Add \"flexibility\" for future requirements\n\
+    **Good:** Implement only what's needed now\n\n```python\n# Bad — YAGNI violation\n\
+    class User:\n    def __init__(self, name, email):\n        self.name = name\n\
+    \        self.email = email\n        self.preferences = {}  # Not needed yet!\n\
+    \        self.metadata = {}     # Not needed yet!\n\n# Good — YAGNI\nclass User:\n\
+    \    def __init__(self, name, email):\n        self.name = name\n        self.email\
+    \ = email\n```\n\n### TDD (Test-Driven Development)\n\nEvery task that produces\
+    \ code should include the full TDD cycle:\n1. Write failing test\n2. Run to verify\
+    \ failure\n3. Write minimal code\n4. Run to verify pass\n\nSee `test-driven-development`\
+    \ skill for details.\n\n### Frequent Commits\n\nCommit after every task:\n```bash\n\
+    git add [files]\ngit commit -m \"type: description\"\n```"
+  checkpoint: Verify principles is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: common_mistakes
+  description: '### Vague Tasks
+
+
+    **Bad:** "Add authentication"
+
+    **Good:** "Create User model with email and password_hash fields"
+
+
+    ### Incomplete Code
+
+
+    **Bad:** "Step 1: Add validation function"
+
+    **Good:** "Step 1: Add validation function" followed by the complete function
+    code
+
+
+    ### Missing Verification
+
+
+    **Bad:** "Step 3: Test it works"
+
+    **Good:** "Step 3: Run `pytest tests/test_auth.py -v`, expected: 3 passed"
+
+
+    ### Missing File Paths
+
+
+    **Bad:** "Create the model file"
+
+    **Good:** "Create: `src/models/user.py`"'
+  checkpoint: Verify common mistakes is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: execution_handoff
+  description: 'After saving the plan, offer the execution approach:
+
+
+    **"Plan complete and saved. Ready to execute using subagent-driven-development
+    — I''ll dispatch a fresh subagent per task with two-stage review (spec compliance
+    then code quality). Shall I proceed?"**
+
+
+    When executing, use the `subagent-driven-development` skill:
+
+    - Fresh `delegate_task` per task with full context
+
+    - Spec compliance review after each task
+
+    - Code quality review after spec passes
+
+    - Proceed only when both reviews approve'
+  checkpoint: Verify execution handoff is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Auto-generated from writing-plans skill. Requires validation through usage.
+  confidence: inferred
+  failure_cases:
+  - May not apply to all writing plans scenarios

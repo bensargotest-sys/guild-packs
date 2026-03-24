@@ -1,0 +1,78 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/jupyter-live-kernel
+problem_class: 'Use a live Jupyter kernel for stateful, iterative Python execution
+  via hamelnb. Load this skill when the task involves exploration, iteration, or inspecting
+  intermediate results — data science, ML experimentation, API exploration, or building
+  up complex code step-by-step. Uses terminal to run CLI commands against a live Jupyter
+  kernel. No new tools required.
+
+  '
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: core_workflow
+  description: "All commands return structured JSON. Always use `--compact` to save\
+    \ tokens.\n\n### 1. Discover servers and notebooks\n\n```\nuv run \"$SCRIPT\"\
+    \ servers --compact\nuv run \"$SCRIPT\" notebooks --compact\n```\n\n### 2. Execute\
+    \ code (primary operation)\n\n```\nuv run \"$SCRIPT\" execute --path <notebook.ipynb>\
+    \ --code '<python code>' --compact\n```\n\nState persists across execute calls.\
+    \ Variables, imports, objects all survive.\n\nMulti-line code works with $'...'\
+    \ quoting:\n```\nuv run \"$SCRIPT\" execute --path scratch.ipynb --code $'import\
+    \ os\\nfiles = os.listdir(\".\")\\nprint(f\"Found {len(files)} files\")' --compact\n\
+    ```\n\n### 3. Inspect live variables\n\n```\nuv run \"$SCRIPT\" variables --path\
+    \ <notebook.ipynb> list --compact\nuv run \"$SCRIPT\" variables --path <notebook.ipynb>\
+    \ preview --name <varname> --compact\n```\n\n### 4. Edit notebook cells\n\n```\n\
+    # View current cells\nuv run \"$SCRIPT\" contents --path <notebook.ipynb> --compact\n\
+    \n# Insert a new cell\nuv run \"$SCRIPT\" edit --path <notebook.ipynb> insert\
+    \ \\\n  --at-index <N> --cell-type code --source '<code>' --compact\n\n# Replace\
+    \ cell source (use cell-id from contents output)\nuv run \"$SCRIPT\" edit --path\
+    \ <notebook.ipynb> replace-source \\\n  --cell-id <id> --source '<new code>' --compact\n\
+    \n# Delete a cell\nuv run \"$SCRIPT\" edit --path <notebook.ipynb> delete --cell-id\
+    \ <id> --compact\n```\n\n### 5. Verification (restart + run all)\n\nOnly use when\
+    \ the user asks for a clean verification or you need to confirm\nthe notebook\
+    \ runs top-to-bottom:\n\n```\nuv run \"$SCRIPT\" restart-run-all --path <notebook.ipynb>\
+    \ --save-outputs --compact\n```"
+  checkpoint: Verify core workflow is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: practical_tips_from_experience
+  description: "1. **First execution after server start may timeout** — the kernel\
+    \ needs a moment\n   to initialize. If you get a timeout, just retry.\n\n2. **The\
+    \ kernel Python is JupyterLab's Python** — packages must be installed in\n   that\
+    \ environment. If you need additional packages, install them into the\n   JupyterLab\
+    \ tool environment first.\n\n3. **--compact flag saves significant tokens** —\
+    \ always use it. JSON output can\n   be very verbose without it.\n\n4. **For pure\
+    \ REPL use**, create a scratch.ipynb and don't bother with cell editing.\n   Just\
+    \ use `execute` repeatedly.\n\n5. **Argument order matters** — subcommand flags\
+    \ like `--path` go BEFORE the\n   sub-subcommand. E.g.: `variables --path nb.ipynb\
+    \ list` not `variables list --path nb.ipynb`.\n\n6. **If a session doesn't exist\
+    \ yet**, you need to start one via the REST API\n   (see Setup section). The tool\
+    \ can't execute without a live kernel session.\n\n7. **Errors are returned as\
+    \ JSON** with traceback — read the `ename` and `evalue`\n   fields to understand\
+    \ what went wrong.\n\n8. **Occasional websocket timeouts** — some operations may\
+    \ timeout on first try,\n   especially after a kernel restart. Retry once before\
+    \ escalating."
+  checkpoint: Verify practical tips from experience is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: timeout_defaults
+  description: 'The script has a 30-second default timeout per execution. For long-running
+
+    operations, pass `--timeout 120`. Use generous timeouts (60+) for initial
+
+    setup or heavy computation.'
+  checkpoint: Verify timeout defaults is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Auto-generated from jupyter-live-kernel skill. Requires validation through
+    usage.
+  confidence: inferred
+  failure_cases:
+  - May not apply to all jupyter live kernel scenarios

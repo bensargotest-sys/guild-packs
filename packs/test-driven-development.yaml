@@ -1,0 +1,227 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/test-driven-development
+problem_class: Use when implementing any feature or bugfix, before writing implementation
+  code. Enforces RED-GREEN-REFACTOR cycle with test-first approach.
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: the_iron_law
+  description: '```
+
+    NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+
+    ```
+
+
+    Write code before the test? Delete it. Start over.
+
+
+    **No exceptions:**
+
+    - Don''t keep it as "reference"
+
+    - Don''t "adapt" it while writing tests
+
+    - Don''t look at it
+
+    - Delete means delete
+
+
+    Implement fresh from tests. Period.'
+  checkpoint: Verify the iron law is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: red_green_refactor_cycle
+  description: "### RED — Write Failing Test\n\nWrite one minimal test showing what\
+    \ should happen.\n\n**Good test:**\n```python\ndef test_retries_failed_operations_3_times():\n\
+    \    attempts = 0\n    def operation():\n        nonlocal attempts\n        attempts\
+    \ += 1\n        if attempts < 3:\n            raise Exception('fail')\n      \
+    \  return 'success'\n\n    result = retry_operation(operation)\n\n    assert result\
+    \ == 'success'\n    assert attempts == 3\n```\nClear name, tests real behavior,\
+    \ one thing.\n\n**Bad test:**\n```python\ndef test_retry_works():\n    mock =\
+    \ MagicMock()\n    mock.side_effect = [Exception(), Exception(), 'success']\n\
+    \    result = retry_operation(mock)\n    assert result == 'success'  # What about\
+    \ retry count? Timing?\n```\nVague name, tests mock not real code.\n\n**Requirements:**\n\
+    - One behavior per test\n- Clear descriptive name (\"and\" in name? Split it)\n\
+    - Real code, not mocks (unless truly unavoidable)\n- Name describes behavior,\
+    \ not implementation\n\n### Verify RED — Watch It Fail\n\n**MANDATORY. Never skip.**\n\
+    \n```bash\n# Use terminal tool to run the specific test\npytest tests/test_feature.py::test_specific_behavior\
+    \ -v\n```\n\nConfirm:\n- Test fails (not errors from typos)\n- Failure message\
+    \ is expected\n- Fails because the feature is missing\n\n**Test passes immediately?**\
+    \ You're testing existing behavior. Fix the test.\n\n**Test errors?** Fix the\
+    \ error, re-run until it fails correctly.\n\n### GREEN — Minimal Code\n\nWrite\
+    \ the simplest code to pass the test. Nothing more.\n\n**Good:**\n```python\n\
+    def add(a, b):\n    return a + b  # Nothing extra\n```\n\n**Bad:**\n```python\n\
+    def add(a, b):\n    result = a + b\n    logging.info(f\"Adding {a} + {b} = {result}\"\
+    )  # Extra!\n    return result\n```\n\nDon't add features, refactor other code,\
+    \ or \"improve\" beyond the test.\n\n**Cheating is OK in GREEN:**\n- Hardcode\
+    \ return values\n- Copy-paste\n- Duplicate code\n- Skip edge cases\n\nWe'll fix\
+    \ it in REFACTOR.\n\n### Verify GREEN — Watch It Pass\n\n**MANDATORY.**\n\n```bash\n\
+    # Run the specific test\npytest tests/test_feature.py::test_specific_behavior"
+  checkpoint: Verify red-green-refactor cycle is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: why_order_matters
+  description: '**"I''ll write tests after to verify it works"**
+
+
+    Tests written after code pass immediately. Passing immediately proves nothing:
+
+    - Might test the wrong thing
+
+    - Might test implementation, not behavior
+
+    - Might miss edge cases you forgot
+
+    - You never saw it catch the bug
+
+
+    Test-first forces you to see the test fail, proving it actually tests something.
+
+
+    **"I already manually tested all the edge cases"**
+
+
+    Manual testing is ad-hoc. You think you tested everything but:
+
+    - No record of what you tested
+
+    - Can''t re-run when code changes
+
+    - Easy to forget cases under pressure
+
+    - "It worked when I tried it" ≠ comprehensive
+
+
+    Automated tests are systematic. They run the same way every time.
+
+
+    **"Deleting X hours of work is wasteful"**
+
+
+    Sunk cost fallacy. The time is already gone. Your choice now:
+
+    - Delete and rewrite with TDD (high confidence)
+
+    - Keep it and add tests after (low confidence, likely bugs)
+
+
+    The "waste" is keeping code you can''t trust.
+
+
+    **"TDD is dogmatic, being pragmatic means adapting"**
+
+
+    TDD IS pragmatic:
+
+    - Finds bugs before commit (faster than debugging after)
+
+    - Prevents regressions (tests catch breaks immediately)
+
+    - Documents behavior (tests show how to use code)
+
+    - Enables refactoring (change freely, tests catch breaks)
+
+
+    "Pragmatic" shortcuts = debugging in production = slower.
+
+
+    **"Tests after achieve the same goals — it''s spirit not ritual"**
+
+
+    No. Tests-after answer "What does this do?" Tests-first answer "What should this
+    do?"
+
+
+    Tests-after are biased by your implementation. You test what you built, not what''s
+    required. Tests-first force edge case discovery before implementing.'
+  checkpoint: Verify why order matters is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: red_flags___stop_and_start_over
+  description: 'If you catch yourself doing any of these, delete the code and restart
+    with TDD:
+
+
+    - Code before test
+
+    - Test after implementation
+
+    - Test passes immediately on first run
+
+    - Can''t explain why test failed
+
+    - Tests added "later"
+
+    - Rationalizing "just this once"
+
+    - "I already manually tested it"
+
+    - "Tests after achieve the same purpose"
+
+    - "Keep as reference" or "adapt existing code"
+
+    - "Already spent X hours, deleting is wasteful"
+
+    - "TDD is dogmatic, I''m being pragmatic"
+
+    - "This is different because..."
+
+
+    **All of these mean: Delete code. Start over with TDD.**'
+  checkpoint: Verify red flags — stop and start over is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: verification_checklist
+  description: 'Before marking work complete:
+
+
+    - [ ] Every new function/method has a test
+
+    - [ ] Watched each test fail before implementing
+
+    - [ ] Each test failed for expected reason (feature missing, not typo)
+
+    - [ ] Wrote minimal code to pass each test
+
+    - [ ] All tests pass
+
+    - [ ] Output pristine (no errors, warnings)
+
+    - [ ] Tests use real code (mocks only if unavoidable)
+
+    - [ ] Edge cases and errors covered
+
+
+    Can''t check all boxes? You skipped TDD. Start over.'
+  checkpoint: Verify verification checklist is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: when_stuck
+  description: '| Problem | Solution |
+
+    |---------|----------|
+
+    | Don''t know how to test | Write the wished-for API. Write the assertion first.
+    Ask the user. |
+
+    | Test too complicated | Design too complicated. Simplify the interface. |
+
+    | Must mock everything | Code too coupled. Use dependency injection. |
+
+    | Test setup huge | Extract helpers. Still complex? Simplify the design. |'
+  checkpoint: Verify when stuck is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Auto-generated from test-driven-development skill. Requires validation
+    through usage.
+  confidence: inferred
+  failure_cases:
+  - May not apply to all test driven development scenarios

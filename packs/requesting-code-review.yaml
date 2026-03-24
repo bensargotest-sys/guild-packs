@@ -1,0 +1,164 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/requesting-code-review
+problem_class: Use when completing tasks, implementing major features, or before merging.
+  Validates work meets requirements through systematic review process.
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: when_to_request_review
+  description: '**Mandatory:**
+
+    - After each task in subagent-driven development
+
+    - After completing a major feature
+
+    - Before merge to main
+
+    - After bug fixes
+
+
+    **Optional but valuable:**
+
+    - When stuck (fresh perspective)
+
+    - Before refactoring (baseline check)
+
+    - After complex logic implementation
+
+    - When touching critical code (auth, payments, data)
+
+
+    **Never skip because:**
+
+    - "It''s simple" — simple bugs compound
+
+    - "I''m in a hurry" — reviews save time
+
+    - "I tested it" — you have blind spots'
+  checkpoint: Verify when to request review is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: review_process
+  description: "### Step 1: Self-Review First\n\nBefore dispatching a reviewer, check\
+    \ yourself:\n\n- [ ] Code follows project conventions\n- [ ] All tests pass\n\
+    - [ ] No debug print statements left\n- [ ] No hardcoded secrets or credentials\n\
+    - [ ] Error handling in place\n- [ ] Commit messages are clear\n\n```bash\n# Run\
+    \ full test suite\npytest tests/ -q\n\n# Check for debug code\nsearch_files(\"\
+    print(\", path=\"src/\", file_glob=\"*.py\")\nsearch_files(\"console.log\", path=\"\
+    src/\", file_glob=\"*.js\")\n\n# Check for TODOs\nsearch_files(\"TODO|FIXME|HACK\"\
+    , path=\"src/\")\n```\n\n### Step 2: Gather Context\n\n```bash\n# Changed files\n\
+    git diff --name-only HEAD~1\n\n# Diff summary\ngit diff --stat HEAD~1\n\n# Recent\
+    \ commits\ngit log --oneline -5\n```\n\n### Step 3: Dispatch Reviewer Subagent\n\
+    \nUse `delegate_task` to dispatch a focused reviewer:\n\n```python\ndelegate_task(\n\
+    \    goal=\"Review implementation for correctness and quality\",\n    context=\"\
+    \"\"\n    WHAT WAS IMPLEMENTED:\n    [Brief description of the feature/fix]\n\n\
+    \    ORIGINAL REQUIREMENTS:\n    [From plan, issue, or user request]\n\n    FILES\
+    \ CHANGED:\n    - src/models/user.py (added User class)\n    - src/auth/login.py\
+    \ (added login endpoint)\n    - tests/test_auth.py (added 8 tests)\n\n    REVIEW\
+    \ CHECKLIST:\n    - [ ] Correctness: Does it do what it should?\n    - [ ] Edge\
+    \ cases: Are they handled?\n    - [ ] Error handling: Is it adequate?\n    - [\
+    \ ] Code quality: Clear names, good structure?\n    - [ ] Test coverage: Are tests\
+    \ meaningful?\n    - [ ] Security: Any vulnerabilities?\n    - [ ] Performance:\
+    \ Any obvious issues?\n\n    OUTPUT FORMAT:\n    - Summary: [brief assessment]\n\
+    \    - Critical Issues: [must fix — blocks merge]\n    - Important Issues: [should\
+    \ fix before merge]\n    - Minor Issues: [nice to have]\n    - Strengths: [what\
+    \ was done well]\n    - Verdict: APPROVE / REQUEST_CHANGES\n    \"\"\",\n    toolsets=['file']\n\
+    )\n```\n\n### Step 4: Act on Feedback\n\n**Critical Issues (block merge):**\n\
+    - Security vulnerabilities\n- Broken functionality\n- Data loss risk\n- Test failures\n\
+    - **Action:** Fix immediate"
+  checkpoint: Verify review process is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: review_dimensions
+  description: '### Correctness
+
+    - Does it implement the requirements?
+
+    - Are there logic errors?
+
+    - Do edge cases work?
+
+    - Are there race conditions?
+
+
+    ### Code Quality
+
+    - Is code readable?
+
+    - Are names clear and descriptive?
+
+    - Is it too complex? (Functions >20 lines = smell)
+
+    - Is there duplication?
+
+
+    ### Testing
+
+    - Are there meaningful tests?
+
+    - Do they cover edge cases?
+
+    - Do they test behavior, not implementation?
+
+    - Do all tests pass?
+
+
+    ### Security
+
+    - Any injection vulnerabilities?
+
+    - Proper input validation?
+
+    - Secrets handled correctly?
+
+    - Access control in place?
+
+
+    ### Performance
+
+    - Any N+1 queries?
+
+    - Unnecessary computation in loops?
+
+    - Memory leaks?
+
+    - Missing caching opportunities?'
+  checkpoint: Verify review dimensions is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: review_output_format
+  description: 'Standard format for reviewer subagent output:
+
+
+    ```markdown'
+  checkpoint: Verify review output format is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: review_summary
+  description: '**Assessment:** [Brief overall assessment]
+
+    **Verdict:** APPROVE / REQUEST_CHANGES
+
+
+    ---'
+  checkpoint: Verify review summary is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: critical_issues__fix_required
+  description: "1. **[Issue title]**\n   - Location: `file.py:45`\n   - Problem: [Description]\n\
+    \   - Suggestion: [How to fix]"
+  checkpoint: Verify critical issues (fix required) is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Auto-generated from requesting-code-review skill. Requires validation
+    through usage.
+  confidence: inferred
+  failure_cases:
+  - May not apply to all requesting code review scenarios

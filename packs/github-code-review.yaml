@@ -1,0 +1,277 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/github-code-review
+problem_class: Review code changes by analyzing git diffs, leaving inline comments
+  on PRs, and performing thorough pre-push review. Works with gh CLI or falls back
+  to git + GitHub REST API via curl.
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: 1__reviewing_local_changes__pre_push
+  description: 'This is pure `git` — works everywhere, no API needed.
+
+
+    ### Get the Diff
+
+
+    ```bash
+
+    # Staged changes (what would be committed)
+
+    git diff --staged
+
+
+    # All changes vs main (what a PR would contain)
+
+    git diff main...HEAD
+
+
+    # File names only
+
+    git diff main...HEAD --name-only
+
+
+    # Stat summary (insertions/deletions per file)
+
+    git diff main...HEAD --stat
+
+    ```
+
+
+    ### Review Strategy
+
+
+    1. **Get the big picture first:**
+
+
+    ```bash
+
+    git diff main...HEAD --stat
+
+    git log main..HEAD --oneline
+
+    ```
+
+
+    2. **Review file by file** — use `read_file` on changed files for full context,
+    and the diff to see what changed:
+
+
+    ```bash
+
+    git diff main...HEAD -- src/auth/login.py
+
+    ```
+
+
+    3. **Check for common issues:**
+
+
+    ```bash
+
+    # Debug statements, TODOs, console.logs left behind
+
+    git diff main...HEAD | grep -n "print(\|console\.log\|TODO\|FIXME\|HACK\|XXX\|debugger"
+
+
+    # Large files accidentally staged
+
+    git diff main...HEAD --stat | sort -t''|'' -k2 -rn | head -10
+
+
+    # Secrets or credential patterns
+
+    git diff main...HEAD | grep -in "credential\|sensitive value\|API access\|auth credential.*=\|private_key"
+
+
+    # Merge conflict markers
+
+    git diff main...HEAD | grep -n "<<<<<<\|>>>>>>\|======="
+
+    ```
+
+
+    4. **Present structured feedback** to the user.
+
+
+    ### Review Output Format
+
+
+    When reviewing local changes, present findings in this structure:
+
+
+    ```'
+  checkpoint: Verify 1. reviewing local changes (pre-push) is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: code_review_summary
+  description: "### Critical\n- **src/auth.py:45** — SQL injection: user input passed\
+    \ directly to query.\n  Suggestion: Use parameterized queries.\n\n### Warnings\n\
+    - **src/models/user.py:23** — credential stored in plaintext. Use bcrypt or argon2.\n\
+    - **src/api/routes.py:112** — No rate limiting on login endpoint.\n\n### Suggestions\n\
+    - **src/utils/helpers.py:8** — Duplicates logic in `src/core/utils.py:34`. Consolidate.\n\
+    - **tests/test_auth.py** — Missing edge case: expired auth credential test.\n\n### Looks\
+    \ Good\n- Clean separation of concerns in the middleware layer\n- Good test coverage\
+    \ for the happy path\n```\n\n---"
+  checkpoint: Verify code review summary is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: 2__reviewing_a_pull_request_on_github
+  description: "### View PR Details\n\n**With gh:**\n\n```bash\ngh pr view 123\ngh\
+    \ pr diff 123\ngh pr diff 123 --name-only\n```\n\n**With git + curl:**\n\n```bash\n\
+    PR_NUMBER=123\n\n# Get PR details\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\"\
+    \ \\\n  https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER \\\n  | python3\
+    \ -c \"\nimport sys, json\npr = json.load(sys.stdin)\nprint(f\\\"Title: {pr['title']}\\\
+    \")\nprint(f\\\"Author: {pr['user']['login']}\\\")\nprint(f\\\"Branch: {pr['head']['ref']}\
+    \ -> {pr['base']['ref']}\\\")\nprint(f\\\"State: {pr['state']}\\\")\nprint(f\\\
+    \"Body:\\n{pr['body']}\\\")\"\n\n# List changed files\ncurl -s \\\n  -H \"Authorization:\
+    \ auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER/files\
+    \ \\\n  | python3 -c \"\nimport sys, json\nfor f in json.load(sys.stdin):\n  \
+    \  print(f\\\"{f['status']:10} +{f['additions']:-4} -{f['deletions']:-4}  {f['filename']}\\\
+    \")\"\n```\n\n### Check Out PR Locally for Full Review\n\nThis works with plain\
+    \ `git` — no `gh` needed:\n\n```bash\n# Fetch the PR branch and check it out\n\
+    git fetch origin pull/123/head:pr-123\ngit checkout pr-123\n\n# Now you can use\
+    \ read_file, search_files, run tests, etc.\n\n# View diff against the base branch\n\
+    git diff main...pr-123\n```\n\n**With gh (shortcut):**\n\n```bash\ngh pr checkout\
+    \ 123\n```\n\n### Leave Comments on a PR\n\n**General PR comment — with gh:**\n\
+    \n```bash\ngh pr comment 123 --body \"Overall looks good, a few suggestions below.\"\
+    \n```\n\n**General PR comment — with curl:**\n\n```bash\ncurl -s -X POST \\\n\
+    \  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/issues/$PR_NUMBER/comments\
+    \ \\\n  -d '{\"body\": \"Overall looks good, a few suggestions below.\"}'\n```\n\
+    \n### Leave Inline Review Comments\n\n**Single inline comment — with gh (via API):**\n\
+    \n```bash\nHEAD_SHA=$(gh pr view 123 --json headRefOid --jq '.headRefOid')\n\n\
+    gh api repos/$OWNER/$REPO/pulls/123/comments \\\n  --method POST \\\n  -f body=\"\
+    This could be simplified with a list comprehension.\" \\\n  -f path=\"src/auth/login.py\"\
+    \ \\\n  -f commit_id=\"$HEAD_SHA\" \\\n  -f line=45 \\\n  -f side"
+  checkpoint: Verify 2. reviewing a pull request on github is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: 3__review_checklist
+  description: 'When performing a code review (local or PR), systematically check:
+
+
+    ### Correctness
+
+    - Does the code do what it claims?
+
+    - Edge cases handled (empty inputs, nulls, large data, concurrent access)?
+
+    - Error paths handled gracefully?
+
+
+    ### Security
+
+    - No hardcoded secrets, credentials, or API accesss
+
+    - Input validation on user-facing inputs
+
+    - No SQL injection, XSS, or path traversal
+
+    - Auth/authz checks where needed
+
+
+    ### Code Quality
+
+    - Clear naming (variables, functions, classes)
+
+    - No unnecessary complexity or premature abstraction
+
+    - DRY — no duplicated logic that should be extracted
+
+    - Functions are focused (single responsibility)
+
+
+    ### Testing
+
+    - New code paths tested?
+
+    - Happy path and error cases covered?
+
+    - Tests readable and maintainable?
+
+
+    ### Performance
+
+    - No N+1 queries or unnecessary loops
+
+    - Appropriate caching where beneficial
+
+    - No blocking operations in async code paths
+
+
+    ### Documentation
+
+    - Public APIs documented
+
+    - Non-obvious logic has comments explaining "why"
+
+    - README updated if behavior changed
+
+
+    ---'
+  checkpoint: Verify 3. review checklist is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: 4__pre_push_review_workflow
+  description: 'When the user asks you to "review the code" or "check before pushing":
+
+
+    1. `git diff main...HEAD --stat` — see scope of changes
+
+    2. `git diff main...HEAD` — read the full diff
+
+    3. For each changed file, use `read_file` if you need more context
+
+    4. Apply the checklist above
+
+    5. Present findings in the structured format (Critical / Warnings / Suggestions
+    / Looks Good)
+
+    6. If critical issues found, offer to fix them before the user pushes
+
+
+    ---'
+  checkpoint: Verify 4. pre-push review workflow is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: 5__pr_review_workflow__end_to_end
+  description: "When the user asks you to \"review PR #N\", \"look at this PR\", or\
+    \ gives you a PR URL, follow this recipe:\n\n### Step 1: Set up environment\n\n\
+    ```bash\nsource ~/.hermes/skills/github/github-auth/scripts/gh-env.sh\n# Or run\
+    \ the inline setup block from the top of this skill\n```\n\n### Step 2: Gather\
+    \ PR context\n\nGet the PR metadata, description, and list of changed files to\
+    \ understand scope before diving into code.\n\n**With gh:**\n```bash\ngh pr view\
+    \ 123\ngh pr diff 123 --name-only\ngh pr checks 123\n```\n\n**With curl:**\n```bash\n\
+    PR_NUMBER=123\n\n# PR details (title, author, description, branch)\ncurl -s -H\
+    \ \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$GH_OWNER/$GH_REPO/pulls/$PR_NUMBER\n\
+    \n# Changed files with line counts\ncurl -s -H \"Authorization: auth credential $GITHUB_TOKEN\"\
+    \ \\\n  https://api.github.com/repos/$GH_OWNER/$GH_REPO/pulls/$PR_NUMBER/files\n\
+    ```\n\n### Step 3: Check out the PR locally\n\nThis gives you full access to `read_file`,\
+    \ `search_files`, and the ability to run tests.\n\n```bash\ngit fetch origin pull/$PR_NUMBER/head:pr-$PR_NUMBER\n\
+    git checkout pr-$PR_NUMBER\n```\n\n### Step 4: Read the diff and understand changes\n\
+    \n```bash\n# Full diff against the base branch\ngit diff main...HEAD\n\n# Or file-by-file\
+    \ for large PRs\ngit diff main...HEAD --name-only\n# Then for each file:\ngit\
+    \ diff main...HEAD -- path/to/file.py\n```\n\nFor each changed file, use `read_file`\
+    \ to see full context around the changes — diffs alone can miss issues visible\
+    \ only with surrounding code.\n\n### Step 5: Run automated checks locally (if\
+    \ applicable)\n\n```bash\n# Run tests if there's a test suite\npython -m pytest\
+    \ 2>&1 | tail -20\n# or: npm test, cargo test, go test ./..., etc.\n\n# Run linter\
+    \ if configured\nruff check . 2>&1 | head -30\n# or: eslint, clippy, etc.\n```\n\
+    \n### Step 6: Apply the review checklist (Section 3)\n\nGo through each category:\
+    \ Correctness, Security, Code Quality, Testing, Performance, Documentation.\n\n\
+    ### Step 7: Post the review to GitHub\n\nCollect your findings and submit them\
+    \ as a formal review with in"
+  checkpoint: Verify 5. pr review workflow (end-to-end) is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Auto-generated from github-code-review skill. Requires validation through
+    usage.
+  confidence: inferred
+  failure_cases:
+  - May not apply to all github code review scenarios

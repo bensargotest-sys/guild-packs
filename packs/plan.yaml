@@ -1,0 +1,66 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/plan
+problem_class: Plan mode for Hermes — inspect context, write a markdown plan into
+  the active workspace's `.hermes/plans/` directory, and do not execute the work.
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: core_behavior
+  description: 'For this turn, you are planning only.
+
+
+    - Do not implement code.
+
+    - Do not edit project files except the plan markdown file.
+
+    - Do not run mutating terminal commands, commit, push, or perform external actions.
+
+    - You may inspect the repo or other context with read-only commands/tools when
+    needed.
+
+    - Your deliverable is a markdown plan saved inside the active workspace under
+    `.hermes/plans/`.'
+  checkpoint: Verify core behavior is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: save_location
+  description: 'Save the plan with `write_file` under:
+
+    - `.hermes/plans/YYYY-MM-DD_HHMMSS-<slug>.md`
+
+
+    Treat that as relative to the active working directory / backend workspace. Hermes
+    file tools are backend-aware, so using this relative path keeps the plan with
+    the workspace on local, docker, ssh, modal, and daytona backends.
+
+
+    If the runtime provides a specific target path, use that exact path.
+
+    If not, create a sensible timestamped filename yourself under `.hermes/plans/`.'
+  checkpoint: Verify save location is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: interaction_style
+  description: '- If the request is clear enough, write the plan directly.
+
+    - If no explicit instruction accompanies `/plan`, infer the task from the current
+    conversation context.
+
+    - If it is genuinely underspecified, ask a brief clarifying question instead of
+    guessing.
+
+    - After saving the plan, reply briefly with what you planned and the saved path.'
+  checkpoint: Verify interaction style is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Auto-generated from plan skill. Requires validation through usage.
+  confidence: inferred
+  failure_cases:
+  - May not apply to all plan scenarios

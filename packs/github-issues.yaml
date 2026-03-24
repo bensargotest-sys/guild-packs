@@ -1,0 +1,87 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/github-issues
+problem_class: Create, manage, triage, and close GitHub issues. Search existing issues,
+  add labels, assign people, and link to PRs. Works with gh CLI or falls back to git
+  + GitHub REST API via curl.
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: 1__viewing_issues
+  description: "**With gh:**\n\n```bash\ngh issue list\ngh issue list --state open\
+    \ --label \"bug\"\ngh issue list --assignee @me\ngh issue list --search \"authentication\
+    \ error\" --state all\ngh issue view 42\n```\n\n**With curl:**\n\n```bash\n# List\
+    \ open issues\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  \"\
+    https://api.github.com/repos/$OWNER/$REPO/issues?state=open&per_page=20\" \\\n\
+    \  | python3 -c \"\nimport sys, json\nfor i in json.load(sys.stdin):\n    if 'pull_request'\
+    \ not in i:  # GitHub API returns PRs in /issues too\n        labels = ', '.join(l['name']\
+    \ for l in i['labels'])\n        print(f\\\"#{i['number']:5}  {i['state']:6} \
+    \ {labels:30}  {i['title']}\\\")\"\n\n# Filter by label\ncurl -s \\\n  -H \"Authorization:\
+    \ auth credential $GITHUB_TOKEN\" \\\n  \"https://api.github.com/repos/$OWNER/$REPO/issues?state=open&labels=bug&per_page=20\"\
+    \ \\\n  | python3 -c \"\nimport sys, json\nfor i in json.load(sys.stdin):\n  \
+    \  if 'pull_request' not in i:\n        print(f\\\"#{i['number']}  {i['title']}\\\
+    \")\"\n\n# View a specific issue\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\"\
+    \ \\\n  https://api.github.com/repos/$OWNER/$REPO/issues/42 \\\n  | python3 -c\
+    \ \"\nimport sys, json\ni = json.load(sys.stdin)\nlabels = ', '.join(l['name']\
+    \ for l in i['labels'])\nassignees = ', '.join(a['login'] for a in i['assignees'])\n\
+    print(f\\\"#{i['number']}: {i['title']}\\\")\nprint(f\\\"State: {i['state']} \
+    \ Labels: {labels}  Assignees: {assignees}\\\")\nprint(f\\\"Author: {i['user']['login']}\
+    \  Created: {i['created_at']}\\\")\nprint(f\\\"\\n{i['body']}\\\")\"\n\n# Search\
+    \ issues\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  \"https://api.github.com/search/issues?q=authentication+error+repo:$OWNER/$REPO\"\
+    \ \\\n  | python3 -c \"\nimport sys, json\nfor i in json.load(sys.stdin)['items']:\n\
+    \    print(f\\\"#{i['number']}  {i['state']:6}  {i['title']}\\\")\"\n```"
+  checkpoint: Verify 1. viewing issues is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: 2__creating_issues
+  description: "**With gh:**\n\n```bash\ngh issue create \\\n  --title \"Login redirect\
+    \ ignores ?next= parameter\" \\\n  --body \"## Description\nAfter logging in,\
+    \ users always land on /dashboard."
+  checkpoint: Verify 2. creating issues is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: steps_to_reproduce
+  description: '1. Navigate to /settings while logged out
+
+    2. Get redirected to /login?next=/settings
+
+    3. Log in
+
+    4. Actual: redirected to /dashboard (should go to /settings)'
+  checkpoint: Verify steps to reproduce is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: expected_behavior
+  description: "Respect the ?next= query parameter.\" \\\n  --label \"bug,backend\"\
+    \ \\\n  --assignee \"username\"\n```\n\n**With curl:**\n\n```bash\ncurl -s -X\
+    \ POST \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/issues\
+    \ \\\n  -d '{\n    \"title\": \"Login redirect ignores ?next= parameter\",\n \
+    \   \"body\": \"## Description\\nAfter logging in, users always land on /dashboard.\\\
+    n\\n## Steps to Reproduce\\n1. Navigate to /settings while logged out\\n2. Get\
+    \ redirected to /login?next=/settings\\n3. Log in\\n4. Actual: redirected to /dashboard\\\
+    n\\n## Expected Behavior\\nRespect the ?next= query parameter.\",\n    \"labels\"\
+    : [\"bug\", \"backend\"],\n    \"assignees\": [\"username\"]\n  }'\n```\n\n###\
+    \ Bug Report Template\n\n```"
+  checkpoint: Verify expected behavior is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: expected_behavior
+  description: <What should happen>
+  checkpoint: Verify expected behavior is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: actual_behavior
+  description: <What actually happens>
+  checkpoint: Verify actual behavior is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Auto-generated from github-issues skill. Requires validation through usage.
+  confidence: inferred
+  failure_cases:
+  - May not apply to all github issues scenarios

@@ -1,0 +1,102 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/code-review
+problem_class: Guidelines for performing thorough code reviews with security and quality
+  focus
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: review_checklist
+  description: '### 1. Security First
+
+    - [ ] No hardcoded secrets, API accesss, or credentials
+
+    - [ ] Input validation on all user-provided data
+
+    - [ ] SQL queries use parameterized statements (no string concatenation)
+
+    - [ ] File operations validate paths (no path traversal)
+
+    - [ ] Authentication/authorization checks present where needed
+
+
+    ### 2. Error Handling
+
+    - [ ] All external calls (API, DB, file) have try/catch
+
+    - [ ] Errors are logged with context (but no sensitive data)
+
+    - [ ] User-facing errors are helpful but don''t leak internals
+
+    - [ ] Resources are cleaned up in finally blocks or context managers
+
+
+    ### 3. Code Quality
+
+    - [ ] Functions do one thing and are reasonably sized (<50 lines ideal)
+
+    - [ ] Variable names are descriptive (no single letters except loops)
+
+    - [ ] No commented-out code left behind
+
+    - [ ] Complex logic has explanatory comments
+
+    - [ ] No duplicate code (DRY principle)
+
+
+    ### 4. Testing Considerations
+
+    - [ ] Edge cases handled (empty inputs, nulls, boundaries)
+
+    - [ ] Happy path and error paths both work
+
+    - [ ] New code has corresponding tests (if test suite exists)'
+  checkpoint: Verify review checklist is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: review_response_format
+  description: 'When providing review feedback, structure it as:
+
+
+    ```'
+  checkpoint: Verify review response format is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: summary
+  description: '[1-2 sentence overall assessment]'
+  checkpoint: Verify summary is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: critical_issues__must_fix
+  description: '- Issue 1: [description + suggested fix]
+
+    - Issue 2: ...'
+  checkpoint: Verify critical issues (must fix) is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: suggestions__nice_to_have
+  description: '- Suggestion 1: [description]'
+  checkpoint: Verify suggestions (nice to have) is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: questions
+  description: '- [Any clarifying questions about intent]
+
+    ```'
+  checkpoint: Verify questions is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Security-first ordering catches injection/auth issues that get missed
+    in correctness-first reviews.
+  confidence: inferred
+  failure_cases:
+  - Very large diffs (1000+ lines) where the checklist becomes overwhelming
+  - Languages/frameworks the agent has limited training on
+  - Reviews where the architecture is wrong but the code is clean — misses forest
+    for trees

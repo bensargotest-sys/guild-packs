@@ -1,0 +1,209 @@
+type: workflow_pack
+version: 1.0.0
+id: guild://hermes/subagent-driven-development
+problem_class: Use when executing implementation plans with independent tasks. Dispatches
+  fresh delegate_task per task with two-stage review (spec compliance then code quality).
+mental_model: ''
+required_inputs:
+- 'task_description: what you need to accomplish'
+phases:
+- name: the_process
+  description: "### 1. Read and Parse Plan\n\nRead the plan file. Extract ALL tasks\
+    \ with their full text and context upfront. Create a todo list:\n\n```python\n\
+    # Read the plan\nread_file(\"docs/plans/feature-plan.md\")\n\n# Create todo list\
+    \ with all tasks\ntodo([\n    {\"id\": \"task-1\", \"content\": \"Create User\
+    \ model with email field\", \"status\": \"pending\"},\n    {\"id\": \"task-2\"\
+    , \"content\": \"Add credential hashing utility\", \"status\": \"pending\"},\n \
+    \   {\"id\": \"task-3\", \"content\": \"Create login endpoint\", \"status\": \"\
+    pending\"},\n])\n```\n\n**Key:** Read the plan ONCE. Extract everything. Don't\
+    \ make subagents read the plan file — provide the full task text directly in context.\n\
+    \n### 2. Per-Task Workflow\n\nFor EACH task in the plan:\n\n#### Step 1: Dispatch\
+    \ Implementer Subagent\n\nUse `delegate_task` with complete context:\n\n```python\n\
+    delegate_task(\n    goal=\"Implement Task 1: Create User model with email and\
+    \ password_hash fields\",\n    context=\"\"\"\n    TASK FROM PLAN:\n    - Create:\
+    \ src/models/user.py\n    - Add User class with email (str) and password_hash\
+    \ (str) fields\n    - Use bcrypt for credential hashing\n    - Include __repr__\
+    \ for debugging\n\n    FOLLOW TDD:\n    1. Write failing test in tests/models/test_user.py\n\
+    \    2. Run: pytest tests/models/test_user.py -v (verify FAIL)\n    3. Write minimal\
+    \ implementation\n    4. Run: pytest tests/models/test_user.py -v (verify PASS)\n\
+    \    5. Run: pytest tests/ -q (verify no regressions)\n    6. Commit: git add\
+    \ -A && git commit -m \"feat: add User model with credential hashing\"\n\n    PROJECT\
+    \ CONTEXT:\n    - Python 3.11, Flask app in src/app.py\n    - Existing models\
+    \ in src/models/\n    - Tests use pytest, run from project root\n    - bcrypt\
+    \ already in requirements.txt\n    \"\"\",\n    toolsets=['terminal', 'file']\n\
+    )\n```\n\n#### Step 2: Dispatch Spec Compliance Reviewer\n\nAfter the implementer\
+    \ completes, verify against the original spec:\n\n```python\ndelegate_task(\n\
+    \    goal=\"Review if implementation matches the spec from the plan\",\n    context=\"\
+    \"\"\n    ORIGINAL TASK SPEC:\n    - Create src/models/user.py w"
+  checkpoint: Verify the process is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: task_granularity
+  description: '**Each task = 2-5 minutes of focused work.**
+
+
+    **Too big:**
+
+    - "Implement user authentication system"
+
+
+    **Right size:**
+
+    - "Create User model with email and credential fields"
+
+    - "Add credential hashing function"
+
+    - "Create login endpoint"
+
+    - "Add JWT auth credential generation"
+
+    - "Create registration endpoint"'
+  checkpoint: Verify task granularity is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: red_flags___never_do_these
+  description: '- Start implementation without a plan
+
+    - Skip reviews (spec compliance OR code quality)
+
+    - Proceed with unfixed critical/important issues
+
+    - Dispatch multiple implementation subagents for tasks that touch the same files
+
+    - Make subagent read the plan file (provide full text in context instead)
+
+    - Skip scene-setting context (subagent needs to understand where the task fits)
+
+    - Ignore subagent questions (answer before letting them proceed)
+
+    - Accept "close enough" on spec compliance
+
+    - Skip review loops (reviewer found issues → implementer fixes → review again)
+
+    - Let implementer self-review replace actual review (both are needed)
+
+    - **Start code quality review before spec compliance is PASS** (wrong order)
+
+    - Move to next task while either review has open issues'
+  checkpoint: Verify red flags — never do these is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: handling_issues
+  description: '### If Subagent Asks Questions
+
+
+    - Answer clearly and completely
+
+    - Provide additional context if needed
+
+    - Don''t rush them into implementation
+
+
+    ### If Reviewer Finds Issues
+
+
+    - Implementer subagent (or a new one) fixes them
+
+    - Reviewer reviews again
+
+    - Repeat until approved
+
+    - Don''t skip the re-review
+
+
+    ### If Subagent Fails a Task
+
+
+    - Dispatch a new fix subagent with specific instructions about what went wrong
+
+    - Don''t try to fix manually in the controller session (context pollution)'
+  checkpoint: Verify handling issues is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: efficiency_notes
+  description: '**Why fresh subagent per task:**
+
+    - Prevents context pollution from accumulated state
+
+    - Each subagent gets clean, focused context
+
+    - No confusion from prior tasks'' code or reasoning
+
+
+    **Why two-stage review:**
+
+    - Spec review catches under/over-building early
+
+    - Quality review ensures the implementation is well-built
+
+    - Catches issues before they compound across tasks
+
+
+    **Cost trade-off:**
+
+    - More subagent invocations (implementer + 2 reviewers per task)
+
+    - But catches issues early (cheaper than debugging compounded problems later)'
+  checkpoint: Verify efficiency notes is complete and correct.
+  anti_patterns: []
+  prompts: []
+- name: integration_with_other_skills
+  description: '### With writing-plans
+
+
+    This skill EXECUTES plans created by the writing-plans skill:
+
+    1. User requirements → writing-plans → implementation plan
+
+    2. Implementation plan → subagent-driven-development → working code
+
+
+    ### With test-driven-development
+
+
+    Implementer subagents should follow TDD:
+
+    1. Write failing test first
+
+    2. Implement minimal code
+
+    3. Verify test passes
+
+    4. Commit
+
+
+    Include TDD instructions in every implementer context.
+
+
+    ### With requesting-code-review
+
+
+    The two-stage review process IS the code review. For final integration review,
+    use the requesting-code-review skill''s review dimensions.
+
+
+    ### With systematic-debugging
+
+
+    If a subagent encounters bugs during implementation:
+
+    1. Follow systematic-debugging process
+
+    2. Find root cause before fixing
+
+    3. Write regression test
+
+    4. Resume implementation'
+  checkpoint: Verify integration with other skills is complete and correct.
+  anti_patterns: []
+  prompts: []
+escalation_rules:
+- If stuck after 2 attempts, ask the user for guidance
+provenance:
+  author_agent: agent://hermes-seed
+  created: '2026-03-24T12:00:00Z'
+  evidence: Auto-generated from subagent-driven-development skill. Requires validation
+    through usage.
+  confidence: inferred
+  failure_cases:
+  - May not apply to all subagent driven development scenarios
