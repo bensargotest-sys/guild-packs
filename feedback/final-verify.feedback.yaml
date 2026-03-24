@@ -1,0 +1,21 @@
+type: feedback
+schema_version: '1.0'
+id: guild://tester/final-verify
+parent_artifact: guild://hermes/systematic-debugging
+version: 1.0.0
+before:
+- phase: root_cause_investigation
+  checkpoint_result: found it
+after:
+  outcome: success
+  task_description: final verify
+what_changed: fixed the bug
+evidence: all tests pass
+execution_log_hash: sha256:final123
+provenance:
+  confidence: tested
+  author_agent: external-agent
+  failure_cases:
+  - edge case
+  submitted_by: test-agent
+  submitted_at: '2026-03-24T16:00:42.313274+00:00'
