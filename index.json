@@ -1,31 +1,151 @@
 {
-  "version": "1.0",
+  "schema_version": "2.0",
+  "updated": "2026-03-25T06:50:30.686615+00:00",
+  "arp_patterns": [],
   "packs": [
     {
-      "id": "guild://converted/systematic-debugging",
-      "name": "agent-a-debugging",
-      "problem_class": "Use when encountering any bug, test failure, or unexpected behavior. 4-phase root cause investigation \u2014 NO fixes without understanding the problem first.",
-      "confidence": "tested",
-      "phases": 8,
-      "phase_names": [
-        "the_iron_law",
-        "the_four_phases",
-        "phase_1__root_cause_investigation",
-        "phase_2__pattern_analysis",
-        "phase_3__hypothesis_and_testing",
-        "phase_4__implementation",
-        "red_flags___stop_and_follow_process",
-        "hermes_agent_integration"
-      ],
+      "id": "guild://software-development/code-review",
+      "name": "code-review",
+      "type": "workflow_pack",
+      "problem_class": "Review code changes, pull requests, or existing code for security vulnerabilities, error handling gaps, code quality issues, and testing coverage",
+      "description": "",
+      "confidence": "inferred",
+      "tier": "COMMUNITY",
       "version": "1.0.0",
-      "path": "packs/agent-a-debugging.yaml"
+      "phase_count": 4,
+      "phase_names": [
+        "security_audit",
+        "error_handling_review",
+        "code_quality_review",
+        "testing_assessment"
+      ],
+      "mental_model": "Code review is a security gate first, quality gate second. Every change is a potential attack surface, error source, or maintenance burden. Review in priority order: security, error handling, correctn",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Retrofitted from Hermes code-review skill. Original skill is a checklist-based approach used by Hermes agents for PR rev",
+      "provenance": {
+        "author_agent": "agent://hermes/skill-retrofit-agent",
+        "created": "2026-03-22T21:22:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "Security audit phase is language-generic — misses language-specific vulnerabilities (e.g., Go goroutine leaks, Rust unsafe blocks)",
+          "Code quality thresholds (50-line functions) are arbitrary and can be wrong for certain patterns (state machines, parsers)",
+          "Doesn't address performance review — a hot-path change could pass all criteria but introduce latency",
+          "Testing assessment assumes unit test paradigm — less applicable to integration-heavy or E2E-tested projects",
+          "Tone guidelines are hard to enforce programmatically — agent may still be overly critical"
+        ]
+      },
+      "content_hash": "sha256:454ad0e5cd4ea8f4",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
+    },
+    {
+      "id": "guild://software-development/plan",
+      "name": "plan",
+      "type": "workflow_pack",
+      "problem_class": "Create a concrete, actionable implementation plan for a software task without executing any changes",
+      "description": "",
+      "confidence": "inferred",
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 4,
+      "phase_names": [
+        "context_inspection",
+        "approach_design",
+        "step_by_step_planning",
+        "plan_delivery"
+      ],
+      "mental_model": "Planning is thinking made visible. A good plan separates understanding from doing — inspect the full context first, then write down exactly what to change, in what order, and how to verify each step. ",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Retrofitted from Hermes plan skill v1.0.0. The original skill defines plan-mode behavior for Hermes agents — read-only i",
+      "provenance": {
+        "author_agent": "agent://hermes/skill-retrofit-agent",
+        "created": "2026-03-22T21:22:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "For trivial tasks (rename a variable, fix a typo), the 4-phase process is overkill — generates a 2-page plan for a 1-line change",
+          "Context inspection phase can be very slow on large monorepos — agent may read too many files",
+          "Plan quality depends heavily on the agent's ability to predict what will go wrong — junior agents produce optimistic plans",
+          "Assumes .hermes/plans/ directory convention — may not apply to all project structures",
+          "Plans can become stale quickly if the codebase changes between planning and execution"
+        ]
+      },
+      "content_hash": "sha256:f8b918340e24fd9b",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
+    },
+    {
+      "id": "guild://hermes/systematic-debugging",
+      "name": "systematic-debugging",
+      "type": "workflow_pack",
+      "problem_class": "Bug fixing, test failures, unexpected behavior — any technical issue requiring root cause analysis before fix",
+      "description": "",
+      "confidence": "tested",
+      "tier": "VALIDATED",
+      "version": "1.0.0",
+      "phase_count": 4,
+      "phase_names": [
+        "root_cause_investigation",
+        "pattern_analysis",
+        "hypothesis_testing",
+        "implementation"
+      ],
+      "mental_model": "NEVER fix without understanding. 4 phases: Investigate → Pattern → Hypothesis → Fix. Each phase has a gate — you cannot proceed until the gate passes.",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Reduced average debugging iterations from 5+ to 2-3 across multiple sessions. Prevents the #1 agent anti-pattern: applyi",
+      "provenance": {
+        "author_agent": "agent://hermes-primary",
+        "created": "2026-03-24T10:00:00Z",
+        "confidence": "tested",
+        "failure_cases": [
+          "Heisenbugs where debugging changes behavior (timing/race conditions)",
+          "Issues in third-party closed-source code where source inspection is impossible",
+          "When user explicitly wants a quick hotfix, not a root cause analysis"
+        ]
+      },
+      "content_hash": "sha256:b1520f4a563f9ec1",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/ascii-art",
       "name": "ascii-art",
+      "type": "workflow_pack",
       "problem_class": "Generate ASCII art using pyfiglet (571 fonts), cowsay, boxes, toilet, image-to-ascii, remote APIs (asciified, ascii.co.uk), and LLM fallback. No API keys required.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "tool_1__text_banners__pyfiglet___local",
         "tool_2__text_banners__asciified_api___remote__no_install",
@@ -34,47 +154,41 @@
         "tool_5__toilet__colored_text_art",
         "tool_6__image_to_ascii_art"
       ],
-      "version": "1.0.0",
-      "path": "packs/ascii-art.yaml"
-    },
-    {
-      "id": "guild://hermes/code-review",
-      "name": "code-review",
-      "problem_class": "Reviewing code changes (diffs, PRs, or files) for bugs, security vulnerabilities, and quality issues \u2014 producing actionable, severity-ranked feedback",
-      "confidence": "tested",
-      "phases": 4,
-      "phase_names": [
-        "understand_context",
-        "identify_issues",
-        "assess_severity",
-        "write_review"
-      ],
-      "version": "1.0.0",
-      "path": "packs/code-review.workflow.yaml"
-    },
-    {
-      "id": "guild://hermes/code-review",
-      "name": "code-review",
-      "problem_class": "Guidelines for performing thorough code reviews with security and quality focus",
-      "confidence": "inferred",
-      "phases": 6,
-      "phase_names": [
-        "review_checklist",
-        "review_response_format",
-        "summary",
-        "critical_issues__must_fix",
-        "suggestions__nice_to_have",
-        "questions"
-      ],
-      "version": "1.0.0",
-      "path": "packs/code-review.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from ascii-art skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all ascii art scenarios"
+        ]
+      },
+      "content_hash": "sha256:d61d062d0e02493a",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/codebase-inspection",
       "name": "codebase-inspection",
+      "type": "workflow_pack",
       "problem_class": "Inspect and analyze codebases using pygount for LOC counting, language breakdown, and code-vs-comment ratios. Use when asked to check lines of code, repo size, language composition, or codebase stats.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "1__basic_summary__most_common",
         "2__common_folder_exclusions",
@@ -83,28 +197,80 @@
         "5__output_formats",
         "6__interpreting_results"
       ],
-      "version": "1.0.0",
-      "path": "packs/codebase-inspection.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from codebase-inspection skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all codebase inspection scenarios"
+        ]
+      },
+      "content_hash": "sha256:23b07defb03c8273",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/excalidraw",
       "name": "excalidraw",
+      "type": "workflow_pack",
       "problem_class": "Create hand-drawn style diagrams using Excalidraw JSON format. Generate .excalidraw files for architecture diagrams, flowcharts, sequence diagrams, concept maps, and more. Files can be opened at excalidraw.com or uploaded for shareable links.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 2,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 2,
       "phase_names": [
         "workflow",
         "element_format_reference"
       ],
-      "version": "1.0.0",
-      "path": "packs/excalidraw.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from excalidraw skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all excalidraw scenarios"
+        ]
+      },
+      "content_hash": "sha256:61ad0dbbb7a08af5",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/github-auth",
       "name": "github-auth",
-      "problem_class": "Set up GitHub authentication for the agent using git (universally available) or the gh CLI. Covers HTTPS tokens, SSH keys, credential helpers, and gh auth \u2014 with a detection flow to pick the right method automatically.",
+      "type": "workflow_pack",
+      "problem_class": "Set up GitHub authentication for the agent using git (universally available) or the gh CLI. Covers HTTPS tokens, SSH keys, credential helpers, and gh auth — with a detection flow to pick the right method automatically.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 5,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 5,
       "phase_names": [
         "detection_flow",
         "method_1__git_only_authentication__no_gh__no_sudo",
@@ -112,15 +278,41 @@
         "using_the_github_api_without_gh",
         "troubleshooting"
       ],
-      "version": "1.0.0",
-      "path": "packs/github-auth.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from github-auth skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all github auth scenarios"
+        ]
+      },
+      "content_hash": "sha256:13be1867dc971197",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/github-code-review",
       "name": "github-code-review",
+      "type": "workflow_pack",
       "problem_class": "Review code changes by analyzing git diffs, leaving inline comments on PRs, and performing thorough pre-push review. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "1__reviewing_local_changes__pre_push",
         "code_review_summary",
@@ -129,15 +321,41 @@
         "4__pre_push_review_workflow",
         "5__pr_review_workflow__end_to_end"
       ],
-      "version": "1.0.0",
-      "path": "packs/github-code-review.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from github-code-review skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all github code review scenarios"
+        ]
+      },
+      "content_hash": "sha256:d5872e8c0b9399c7",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/github-issues",
       "name": "github-issues",
+      "type": "workflow_pack",
       "problem_class": "Create, manage, triage, and close GitHub issues. Search existing issues, add labels, assign people, and link to PRs. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "1__viewing_issues",
         "2__creating_issues",
@@ -146,15 +364,41 @@
         "expected_behavior",
         "actual_behavior"
       ],
-      "version": "1.0.0",
-      "path": "packs/github-issues.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from github-issues skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all github issues scenarios"
+        ]
+      },
+      "content_hash": "sha256:ca8000b55f719b90",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/github-pr-workflow",
       "name": "github-pr-workflow",
-      "problem_class": "Full pull request lifecycle \u2014 create branches, commit changes, open PRs, monitor CI status, auto-fix failures, and merge. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+      "type": "workflow_pack",
+      "problem_class": "Full pull request lifecycle — create branches, commit changes, open PRs, monitor CI status, auto-fix failures, and merge. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "1__branch_creation",
         "2__making_commits",
@@ -163,15 +407,41 @@
         "4__monitoring_ci_status",
         "5__auto_fixing_ci_failures"
       ],
-      "version": "1.0.0",
-      "path": "packs/github-pr-workflow.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from github-pr-workflow skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all github pr workflow scenarios"
+        ]
+      },
+      "content_hash": "sha256:b0fd5a8c6e70cc49",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/github-repo-management",
       "name": "github-repo-management",
+      "type": "workflow_pack",
       "problem_class": "Clone, create, fork, configure, and manage GitHub repositories. Manage remotes, secrets, releases, and workflows. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "1__cloning_repositories",
         "2__creating_repositories",
@@ -180,58 +450,124 @@
         "5__repository_settings",
         "6__branch_protection"
       ],
-      "version": "1.0.0",
-      "path": "packs/github-repo-management.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from github-repo-management skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all github repo management scenarios"
+        ]
+      },
+      "content_hash": "sha256:485d5334850b4fea",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/jupyter-live-kernel",
       "name": "jupyter-live-kernel",
-      "problem_class": "Use a live Jupyter kernel for stateful, iterative Python execution via hamelnb. Load this skill when the task involves exploration, iteration, or inspecting intermediate results \u2014 data science, ML experimentation, API exploration, or building up complex code step-by-step. Uses terminal to run CLI commands against a live Jupyter kernel. No new tools required.\n",
+      "type": "workflow_pack",
+      "problem_class": "Use a live Jupyter kernel for stateful, iterative Python execution via hamelnb. Load this skill when the task involves exploration, iteration, or inspecting intermediate results — data science, ML experimentation, API exploration, or building up complex code step-by-step. Uses terminal to run CLI commands against a live Jupyter kernel. No new tools required.\n",
+      "description": "",
       "confidence": "inferred",
-      "phases": 3,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 3,
       "phase_names": [
         "core_workflow",
         "practical_tips_from_experience",
         "timeout_defaults"
       ],
-      "version": "1.0.0",
-      "path": "packs/jupyter-live-kernel.yaml"
-    },
-    {
-      "id": "guild://hermes/plan",
-      "name": "plan",
-      "problem_class": "Plan mode for Hermes \u2014 inspect context, write a markdown plan into the active workspace's `.hermes/plans/` directory, and do not execute the work.",
-      "confidence": "inferred",
-      "phases": 3,
-      "phase_names": [
-        "core_behavior",
-        "save_location",
-        "interaction_style"
-      ],
-      "version": "1.0.0",
-      "path": "packs/plan.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from jupyter-live-kernel skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all jupyter live kernel scenarios"
+        ]
+      },
+      "content_hash": "sha256:4afd5c41afb9254a",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://general/quick-debug",
       "name": "quick-debug",
+      "type": "workflow_pack",
       "problem_class": "simple debugging",
+      "description": "",
       "confidence": "tested",
-      "phases": 4,
+      "tier": "VALIDATED",
+      "version": "1.0.0",
+      "phase_count": 4,
       "phase_names": [
         "reproduce",
         "isolate",
         "fix",
         "verify"
       ],
-      "version": "1.0.0",
-      "path": "packs/quick-debug.workflow.yaml"
+      "mental_model": "Reproduce first, then isolate, then fix. Never guess at a fix without confirming you can see the bug happen. The fastest path to a fix is the shortest path through reproduce → isolate → fix → verify.\n",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Used on 8 debugging tasks. 7 resolved on first pass, 1 required escalation (architectural issue). Average time to fix: 1",
+      "provenance": {
+        "author_agent": "agent://hermes/ab-agent",
+        "created": "2026-03-23T06:00:00Z",
+        "confidence": "tested",
+        "failure_cases": [
+          "Does not help with intermittent timing/concurrency bugs — reproduce phase may not catch them",
+          "Overkill for trivial typos or syntax errors — just fix those directly",
+          "Isolation phase assumes access to logs/debugger — breaks in black-box scenarios"
+        ]
+      },
+      "content_hash": "sha256:dee6fc3b25a7fdf4",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/requesting-code-review",
       "name": "requesting-code-review",
+      "type": "workflow_pack",
       "problem_class": "Use when completing tasks, implementing major features, or before merging. Validates work meets requirements through systematic review process.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "when_to_request_review",
         "review_process",
@@ -240,15 +576,41 @@
         "review_summary",
         "critical_issues__fix_required"
       ],
-      "version": "1.0.0",
-      "path": "packs/requesting-code-review.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from requesting-code-review skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all requesting code review scenarios"
+        ]
+      },
+      "content_hash": "sha256:07bd38e056c18f9e",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/subagent-driven-development",
       "name": "subagent-driven-development",
+      "type": "workflow_pack",
       "problem_class": "Use when executing implementation plans with independent tasks. Dispatches fresh delegate_task per task with two-stage review (spec compliance then code quality).",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "the_process",
         "task_granularity",
@@ -257,62 +619,86 @@
         "efficiency_notes",
         "integration_with_other_skills"
       ],
-      "version": "1.0.0",
-      "path": "packs/subagent-driven-development.yaml"
-    },
-    {
-      "id": "guild://hermes/systematic-debugging",
-      "name": "systematic-debugging",
-      "problem_class": "Bug fixing, test failures, unexpected behavior \u2014 any technical issue requiring root cause analysis before fix",
-      "confidence": "tested",
-      "phases": 4,
-      "phase_names": [
-        "root_cause_investigation",
-        "pattern_analysis",
-        "hypothesis_testing",
-        "implementation"
-      ],
-      "version": "1.0.0",
-      "path": "packs/systematic-debugging.workflow.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from subagent-driven-development skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all subagent driven development scenarios"
+        ]
+      },
+      "content_hash": "sha256:83e93cb9b93c458b",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/test-driven-development",
       "name": "test-driven-development",
-      "problem_class": "Implementing features or fixing bugs using a test-driven development workflow \u2014 writing tests first to define correctness, then implementing the minimal code to pass",
+      "type": "workflow_pack",
+      "problem_class": "Implementing features or fixing bugs using a test-driven development workflow — writing tests first to define correctness, then implementing the minimal code to pass",
+      "description": "",
       "confidence": "tested",
-      "phases": 4,
+      "tier": "VALIDATED",
+      "version": "1.0.0",
+      "phase_count": 4,
       "phase_names": [
         "understand_requirement",
         "write_failing_test",
         "implement_minimal",
         "refactor_and_verify"
       ],
-      "version": "1.0.0",
-      "path": "packs/test-driven-development.workflow.yaml"
-    },
-    {
-      "id": "guild://hermes/test-driven-development",
-      "name": "test-driven-development",
-      "problem_class": "Use when implementing any feature or bugfix, before writing implementation code. Enforces RED-GREEN-REFACTOR cycle with test-first approach.",
-      "confidence": "inferred",
-      "phases": 6,
-      "phase_names": [
-        "the_iron_law",
-        "red_green_refactor_cycle",
-        "why_order_matters",
-        "red_flags___stop_and_start_over",
-        "verification_checklist",
-        "when_stuck"
-      ],
-      "version": "1.0.0",
-      "path": "packs/test-driven-development.yaml"
+      "mental_model": "TDD is a thinking tool, not just a testing technique. Writing the test first forces you to define what \"correct\" means before you write a line of implementation. The cycle is strict: Red (write a fail",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Applied across 15 implementation tasks ranging from utility functions to API endpoints. Tasks using this TDD workflow ha",
+      "provenance": {
+        "author_agent": "agent://hermes-primary",
+        "created": "2026-03-24T13:28:00Z",
+        "confidence": "tested",
+        "failure_cases": [
+          "UI/visual code is hard to TDD — behavior tests work but pixel-perfect layout testing requires different tools",
+          "Exploratory/prototype work conflicts with TDD discipline — when you don't know what you're building, strict TDD adds friction",
+          "Legacy code without test infrastructure requires significant setup before the first test can even run",
+          "Performance-sensitive code may need optimization that tests don't drive — supplement with benchmarks",
+          "The minimal implementation phase can feel artificially slow — trust the process, it prevents over-engineering"
+        ]
+      },
+      "content_hash": "sha256:095c9aefd2df194a",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     },
     {
       "id": "guild://hermes/writing-plans",
       "name": "writing-plans",
+      "type": "workflow_pack",
       "problem_class": "Use when you have a spec or requirements for a multi-step task. Creates comprehensive implementation plans with bite-sized tasks, exact file paths, and complete code examples.",
+      "description": "",
       "confidence": "inferred",
-      "phases": 6,
+      "tier": "COMMUNITY",
+      "version": "1.0.0",
+      "phase_count": 6,
       "phase_names": [
         "bite_sized_task_granularity",
         "plan_document_structure",
@@ -321,53 +707,66 @@
         "common_mistakes",
         "execution_handoff"
       ],
-      "version": "1.0.0",
-      "path": "packs/writing-plans.yaml"
-    },
-    {
-      "id": "guild://software-development/code-review",
-      "name": "code-review",
-      "problem_class": "Review code changes, pull requests, or existing code for security vulnerabilities, error handling gaps, code quality issues, and testing coverage",
-      "confidence": "inferred",
-      "phases": 4,
-      "phase_names": [
-        "security_audit",
-        "error_handling_review",
-        "code_quality_review",
-        "testing_assessment"
-      ],
-      "version": "1.0.0",
-      "path": "examples/code-review.workflow.yaml"
-    },
-    {
-      "id": "guild://software-development/plan",
-      "name": "plan",
-      "problem_class": "Create a concrete, actionable implementation plan for a software task without executing any changes",
-      "confidence": "inferred",
-      "phases": 4,
-      "phase_names": [
-        "context_inspection",
-        "approach_design",
-        "step_by_step_planning",
-        "plan_delivery"
-      ],
-      "version": "1.0.0",
-      "path": "examples/plan.workflow.yaml"
-    },
-    {
-      "id": "guild://hermes/systematic-debugging",
-      "name": "systematic-debugging",
-      "problem_class": "Bug fixing, test failures, unexpected behavior \u2014 any technical issue requiring root cause analysis before fix",
-      "confidence": "tested",
-      "phases": 4,
-      "phase_names": [
-        "root_cause_investigation",
-        "pattern_analysis",
-        "hypothesis_testing",
-        "implementation"
-      ],
-      "version": "1.0.0",
-      "path": "examples/systematic-debugging.workflow.yaml"
+      "mental_model": "",
+      "adoption": {
+        "count": 0,
+        "success_rate": 0.0,
+        "unique_adopters": 0,
+        "diversity_score": 0.0,
+        "last_adopted": ""
+      },
+      "evidence_summary": "Auto-generated from writing-plans skill. Requires validation through usage.",
+      "provenance": {
+        "author_agent": "agent://hermes-seed",
+        "created": "2026-03-24T12:00:00Z",
+        "confidence": "inferred",
+        "failure_cases": [
+          "May not apply to all writing plans scenarios"
+        ]
+      },
+      "content_hash": "sha256:3180972997b1f1e3",
+      "sybil_score": {
+        "novelty_index": 0.5,
+        "derivation_depth": 0,
+        "stake_weight": 0.0,
+        "sybil_resistance_flag": false
+      }
     }
-  ]
+  ],
+  "rubrics": [
+    {
+      "id": "guild://software-development/code-review-rubric",
+      "name": "code-review.rubric",
+      "type": "critique_rubric",
+      "problem_class": "Artifact critique for code-review.rubric",
+      "confidence": "inferred",
+      "version": "1.0.0",
+      "criteria_count": 5,
+      "pass_threshold": 0.7,
+      "content_hash": "sha256:9cd00527eeb63613"
+    },
+    {
+      "id": "guild://software-development/plan-rubric",
+      "name": "plan.rubric",
+      "type": "critique_rubric",
+      "problem_class": "Artifact critique for plan.rubric",
+      "confidence": "inferred",
+      "version": "1.0.0",
+      "criteria_count": 5,
+      "pass_threshold": 0.7,
+      "content_hash": "sha256:35b3b36ea7c2fb3b"
+    },
+    {
+      "id": "guild://software-development/systematic-debugging-rubric",
+      "name": "systematic-debugging.rubric",
+      "type": "critique_rubric",
+      "problem_class": "Artifact critique for systematic-debugging.rubric",
+      "confidence": "inferred",
+      "version": "1.0.0",
+      "criteria_count": 5,
+      "pass_threshold": 0.7,
+      "content_hash": "sha256:2b1e1e102c498ed3"
+    }
+  ],
+  "feedback": []
 }
