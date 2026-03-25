@@ -1,0 +1,81 @@
+# ARP Schema v1.0 — Atomic Reasoning Pattern
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+required: [type, schema_version, id, name, cognitive_action, entry_condition, exit_condition, provenance, evidence]
+properties:
+  type:
+    const: atomic_reasoning_pattern
+  schema_version:
+    const: "1.0"
+  id:
+    pattern: "^guild://patterns/[a-z0-9-]+$"
+  name:
+    type: string
+    minLength: 1
+  cognitive_action:
+    type: string
+    minLength: 20
+  entry_condition:
+    type: string
+    minLength: 10
+  exit_condition:
+    type: string
+    minLength: 10
+  anti_patterns:
+    type: array
+    items:
+      type: object
+      required: [name, description, severity]
+      properties:
+        name: {type: string}
+        description: {type: string}
+        severity: {enum: [low, medium, high]}
+  failure_cases:
+    type: array
+    items:
+      type: object
+      required: [name, severity, probability, description]
+      properties:
+        name: {type: string}
+        severity: {enum: [low, medium, high]}
+        probability: {enum: [low, medium, high]}
+        description: {type: string}
+  provenance:
+    type: object
+    required: [author_agent, created, content_hash]
+    properties:
+      author_agent: {type: string, pattern: "^agent://"}
+      created: {type: string, format: date-time}
+      content_hash: {type: string, pattern: "^sha256:"}
+      signature: {type: ["string", "null"]}
+      derivation_chain: {type: array}
+  evidence:
+    type: object
+    required: [metric, sample_size, method, context]
+    properties:
+      metric: {type: string}
+      before_mean: {type: ["number", "null"]}
+      after_mean: {type: ["number", "null"]}
+      sample_size: {type: integer, minimum: 1}
+      method: {enum: [automated_telemetry, self-reported, structured_observation]}
+      p_value: {type: ["number", "null"]}
+      context: {type: string}
+      evidence_summary: {type: ["string", "null"]}
+  adoption:
+    type: object
+    properties:
+      count: {type: integer, minimum: 0}
+      success_rate: {type: number, minimum: 0, maximum: 1}
+      unique_adopters: {type: integer, minimum: 0}
+      diversity_score: {type: number, minimum: 0, maximum: 1}
+      last_adopted: {type: ["string", "null"]}
+  sybil_score:
+    type: object
+    properties:
+      content_fingerprint: {type: string}
+      novelty_index: {type: number, minimum: 0, maximum: 1}
+      derivation_depth: {type: integer, minimum: 0}
+      stake_weight: {type: number}
+      sybil_resistance_flag: {type: boolean}
+  confidence:
+    enum: [guessed, inferred, tested, validated]

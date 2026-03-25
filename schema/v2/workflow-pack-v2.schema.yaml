@@ -1,0 +1,83 @@
+# Workflow Pack Schema v2.0 — ARP Composition
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+required: [type, schema_version, id, problem_class, arp_references, structure, evidence, provenance]
+properties:
+  type:
+    const: workflow_pack
+  schema_version:
+    const: "2.0"
+  id:
+    pattern: "^guild://[a-z0-9-]+/[a-z0-9-]+$"
+  version:
+    type: string
+  problem_class:
+    type: string
+  mental_model:
+    type: string
+  required_inputs:
+    type: array
+    items: {type: string}
+  arp_references:
+    type: array
+    items: {type: string, pattern: "^guild://patterns/"}
+    minItems: 1
+  structure:
+    type: array
+    items:
+      type: object
+      required: [arp_id, label, checkpoint]
+      properties:
+        arp_id: {type: string, pattern: "^guild://patterns/"}
+        label: {type: string}
+        checkpoint: {type: string}
+        escalation_if_fail: {type: string}
+  evidence:
+    type: object
+    required: [metric, sample_size, method, context]
+    properties:
+      metric: {type: string}
+      before_mean: {type: ["number", "null"]}
+      after_mean: {type: ["number", "null"]}
+      sample_size: {type: integer, minimum: 1}
+      method: {enum: [automated_telemetry, self-reported, structured_observation]}
+      p_value: {type: ["number", "null"]}
+      context: {type: string}
+      evidence_summary: {type: ["string", "null"]}
+  provenance:
+    type: object
+    required: [author_agent, created, content_hash]
+    properties:
+      author_agent: {type: string, pattern: "^agent://"}
+      created: {type: string, format: date-time}
+      content_hash: {type: string, pattern: "^sha256:"}
+      signature: {type: ["string", "null"]}
+      derivation_chain: {type: array}
+  adoption:
+    type: object
+    properties:
+      count: {type: integer, minimum: 0}
+      success_rate: {type: number, minimum: 0, maximum: 1}
+      unique_adopters: {type: integer, minimum: 0}
+      diversity_score: {type: number, minimum: 0, maximum: 1}
+      last_adopted: {type: ["string", "null"]}
+  sybil_score:
+    type: object
+    properties:
+      content_fingerprint: {type: string}
+      novelty_index: {type: number, minimum: 0, maximum: 1}
+      derivation_depth: {type: integer, minimum: 0}
+      stake_weight: {type: number}
+      sybil_resistance_flag: {type: boolean}
+  confidence:
+    enum: [guessed, inferred, tested, validated]
+  failure_cases:
+    type: array
+    items:
+      type: object
+      required: [name, severity, probability, description]
+      properties:
+        name: {type: string}
+        severity: {enum: [low, medium, high]}
+        probability: {enum: [low, medium, high]}
+        description: {type: string}

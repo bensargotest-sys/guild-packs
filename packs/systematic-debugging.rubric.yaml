@@ -1,0 +1,92 @@
+type: critique_rubric
+version: '1.0.0'
+id: guild://software-development/systematic-debugging-rubric
+domain: software-development
+
+criteria:
+  - name: root_cause_identification
+    description: "Was the actual root cause found before any fix was attempted? Is there evidence the agent understood WHY the bug occurred, not just WHERE?"
+    weight: 0.30
+    scoring: >
+      1.0 = Root cause clearly identified with evidence chain (error → trace → origin).
+      Fix targets the origin, not the symptom. 0.5 = Correct area identified but
+      explanation is vague or fix is at symptom rather than source.
+      0.0 = No investigation — jumped straight to a fix, or root cause is wrong.
+    examples_good:
+      - "Traced 'NoneType' error through 3 call levels to find that config loader silently returns None on missing key instead of raising"
+      - "Identified race condition by instrumenting both threads and showing interleaved log output with timestamps"
+    examples_bad:
+      - "Saw NullPointerException, added a null check at the crash site without asking why the value was null"
+      - "Said 'the test is flaky' without identifying the timing-dependent condition"
+
+  - name: evidence_gathering
+    description: "Did the agent gather concrete evidence — error messages, reproduction steps, git history, logs, data flow traces — before forming hypotheses?"
+    weight: 0.20
+    scoring: >
+      1.0 = Multiple evidence types collected (error output, reproduction, git diff, data flow trace).
+      Evidence directly supports the root cause conclusion. 0.5 = Some evidence collected
+      but gaps remain (e.g., didn't check git history, didn't reproduce).
+      0.0 = No evidence — hypothesis based on assumption or pattern matching alone.
+    examples_good:
+      - "Ran failing test with verbose output, checked git log for recent changes, traced the bad value through 3 functions to its origin"
+      - "Added logging at service boundaries in multi-component system, ran once, identified exact component where data corrupted"
+    examples_bad:
+      - "Assumed the cause from the error message without reproducing or checking recent changes"
+      - "Read the error but didn't trace data flow — fixed the first suspicious-looking code"
+
+  - name: fix_isolation
+    description: "Was the fix a single, focused change targeting the root cause? No bundled refactoring, no multi-fix commits, no symptom patches."
+    weight: 0.20
+    scoring: >
+      1.0 = Single change addressing the identified root cause. Clean diff. No unrelated modifications.
+      0.5 = Fix addresses root cause but includes minor unrelated changes or cosmetic improvements.
+      0.0 = Multiple changes bundled together, or fix addresses symptom not cause, or shotgun debugging (change many things hoping one works).
+    examples_good:
+      - "Changed one line: the config loader now raises KeyError on missing key instead of returning None"
+      - "Added mutex around the shared resource access — single change, targeted at the race condition"
+    examples_bad:
+      - "Fixed the bug AND refactored the file AND updated the linter config in one commit"
+      - "Added null checks at 5 different call sites instead of fixing why the value was null"
+
+  - name: regression_testing
+    description: "Was a regression test written that fails without the fix and passes with it? Does the full test suite still pass?"
+    weight: 0.20
+    scoring: >
+      1.0 = Regression test exists, demonstrates the bug, passes with fix. Full suite green.
+      0.5 = Existing test was used to verify but no new regression test written. Or regression test
+      written but full suite not run. 0.0 = No test verification at all, or fix introduced new failures.
+    examples_good:
+      - "Wrote test_config_raises_on_missing_key() that fails before fix, passes after. Full suite: 247 passed, 0 failed."
+      - "Added test reproducing the race condition with controlled thread scheduling. All 312 tests pass."
+    examples_bad:
+      - "Manually verified the fix works but wrote no test"
+      - "Ran only the specific failing test, didn't check for regressions in the full suite"
+
+  - name: escalation_discipline
+    description: "Did the agent respect the Rule of Three? After 3 failed fixes, did it stop and question architecture? Did it escalate when genuinely stuck instead of thrashing?"
+    weight: 0.10
+    scoring: >
+      1.0 = Either fixed on first or second attempt, or correctly escalated after 3 failures
+      with architectural analysis. 0.5 = Took 3+ attempts but eventually escalated.
+      0.0 = Thrashed through 4+ fix attempts without escalating, or never admitted being stuck.
+    examples_good:
+      - "After 3 failed fixes each revealing new coupling, stopped and said: 'This is an architectural problem. The cache shares mutable refs. We need to discuss a redesign.'"
+      - "Fixed on first attempt after thorough Phase 1 investigation"
+    examples_bad:
+      - "Tried 6 different fixes over 3 hours, each creating new problems, never questioned the approach"
+      - "Said 'I don't understand this' but kept making changes instead of asking for help"
+
+pass_threshold: 0.70
+
+provenance:
+  author_agent: agent://hermes/skill-retrofit-agent
+  created: '2026-03-22T21:22:00Z'
+  evidence: >
+    Derived from the Hermes systematic-debugging skill v1.1.0 phase structure and red flags.
+    Criteria map directly to the skill's four phases and key anti-patterns. Weight distribution
+    emphasizes root cause identification (0.30) reflecting the skill's Iron Law.
+  confidence: inferred
+  failure_cases:
+    - "Root cause weight (0.30) may over-penalize agents that find the right fix through pattern matching without explicit causal chain"
+    - "Escalation discipline criterion (0.10) is hard to evaluate when the bug was fixed on first attempt — becomes N/A"
+    - "Regression testing criterion assumes a test framework exists — unfair for codebases without test infrastructure"

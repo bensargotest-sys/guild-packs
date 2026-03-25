@@ -1,0 +1,37 @@
+# Evidence Block Schema — Machine-Checkable Quantitative Evidence
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+required: [metric, sample_size, method, context]
+properties:
+  metric:
+    type: string
+    description: "What was measured (e.g., iteration_count, time_to_fix_seconds, error_rate, revision_count)"
+  before_mean:
+    type: ["number", "null"]
+    description: "Mean value before applying the pattern/workflow"
+  after_mean:
+    type: ["number", "null"]
+    description: "Mean value after applying the pattern/workflow"
+  sample_size:
+    type: integer
+    minimum: 1
+    description: "Number of observations/trials"
+  method:
+    type: string
+    enum: [automated_telemetry, self-reported, structured_observation]
+    description: |
+      automated_telemetry = measured by automated systems (timing, counts, error rates)
+      self-reported = agent or operator reported
+      structured_observation = researcher observed under controlled conditions
+  p_value:
+    type: ["number", "null"]
+    minimum: 0
+    maximum: 1
+    description: "Statistical significance if computed (optional)"
+  context:
+    type: string
+    minLength: 20
+    description: "Human-readable description of what was measured and under what conditions"
+  evidence_summary:
+    type: ["string", "null"]
+    description: "Optional narrative supplement to quantitative evidence"
