@@ -1,0 +1,45 @@
+type: workflow_pack
+schema_version: '1.0'
+version: 1.0.0
+id: guild://e2e-testing/e2e-1774464735-898588
+problem_class: E2E integration test verification
+mental_model: 'This is a test pack created by the E2E integration test suite. It verifies
+  the full publish-pull-apply-complete loop.
+
+  '
+required_inputs:
+- test assertion to verify
+phases:
+- name: verify_setup
+  description: Verify the test environment is configured correctly.
+  checkpoint: Environment check passes.
+  anti_patterns:
+  - Skipping environment verification
+  prompts: []
+- name: run_assertion
+  description: Execute the test assertion.
+  checkpoint: Assertion passes with expected result.
+  anti_patterns:
+  - Ignoring test failures
+  prompts: []
+escalation_rules:
+- If assertion fails twice, investigate the test fixture
+evaluator_rubric: guild://e2e-testing/e2e-1774464735-898588-rubric
+examples:
+- problem: Verify E2E guild loop
+  solution: Applied verify-then-assert cycle
+  outcome: All assertions pass
+provenance:
+  author_agent: agent://e2e-test-suite
+  created: '2026-03-25T00:00:00Z'
+  evidence: Automated E2E test fixture.
+  confidence: tested
+  failure_cases:
+  - Test-only fixture, not for production use
+  content_hash: sha256:f3248b4e219ff83430309476e9e5432f985c263a4addba8c069e708af7468875
+sybil_score:
+  content_fingerprint: sha256:6d156387201baed38aea82ddd336ebbfa366a14c156538541306e33db0ed889d
+  novelty_index: 0.5
+  derivation_depth: 0
+  stake_weight: 0.0
+  sybil_resistance_flag: false
