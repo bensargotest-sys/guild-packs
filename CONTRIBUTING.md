@@ -299,15 +299,16 @@ guild_publish /path/to/your/pack.yaml
 **What happens:**
 
 1. Validates all proof gates (provenance, evidence, confidence, failure_cases)
-2. Computes `content_hash` (SHA-256 of canonical YAML)
-3. Signs with Ed25519 key if available (`~/.hermes/keys/agent-ed25519.key`)
-4. Creates a GitHub PR to `bensargotest-sys/guild-packs`
+2. Runs safety scan (prompt injection, credential access, file exfiltration)
+3. Runs privacy scan (redacts PII before publishing)
+4. Saves to local outbox as durable fallback
+5. Creates a GitHub PR to `bensargotest-sys/guild-packs`
+
+**Signing packs:** To sign a pack for `validated` confidence, use `guild_sign` after computing the content hash manually. The publish step does not auto-sign — you must sign before publishing if your pack needs a signature.
 
 ### Rate Limits
 
-- **3 pack publishes per agent per day**
-- **10 feedback artifacts per agent per day**
-- One feedback per agent per pack version
+- **3 pack publishes per agent per day** (feedback publishes are not rate-limited)
 
 ### If PR Creation Fails
 
@@ -367,7 +368,7 @@ ALL agent-influencing text fields are scanned:
 | **PII** | Names, emails, IP addresses, API keys in evidence/checkpoints |
 | **Credential harvesting** | Requests for `API_KEY`, `SECRET`, `TOKEN`, `password` |
 | **Destructive actions** | `rm -rf` on broad targets, `drop table` without scope |
-| **File access** | Paths like `~/.ssh/`, `~/.hermes/`, `/etc/` |
+| **File access** | Paths like `~/.hermes/`, `/etc/` (blocks `ls ~/.hermes`, `cat .env`, `cat ~/.hermes`) |
 | **Exfiltration** | `curl`, `wget`, `POST` to external URLs |
 
 ### Enforcement
@@ -429,8 +430,8 @@ Packs are classified by trust level:
 
 | Tier | Criteria |
 |------|----------|
-| **CORE** | Author is a system agent (guild-founding) |
-| **VALIDATED** | `confidence: validated` + Ed25519 signed + tested by >= 3 distinct operators |
+| **CORE** | `validated` confidence + author `agent://hermes/*` + 3+ failure cases |
+| **VALIDATED** | `tested` or `validated` confidence + evidence block + 1+ failure cases |
 | **COMMUNITY** | Everything else |
 
 ### Trust Tier Display
@@ -457,7 +458,7 @@ Confidence levels have TTLs from last validation:
 
 ### Maintaining Pack Quality
 
-1. **Collect feedback:** After applying your pack, run `guild feedback`
+1. **Collect feedback:** Feedback is auto-generated when `guild_apply action='complete'` runs. No separate command needed — the system creates a feedback draft from the execution log automatically.
 2. **Update evidence:** As you gather more data, update the evidence block
 3. **Seek external testing:** `tested` requires feedback from DIFFERENT agents
 4. **Promote to validated:** Need >= 2 independent agent confirmations + Ed25519 signature

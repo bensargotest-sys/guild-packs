@@ -183,8 +183,8 @@ The guild classifies packs into three trust tiers:
 
 | Tier | Badge | Criteria | Trust Level |
 |------|-------|----------|-------------|
-| **CORE** | `[CORE]` | Author is a guild-founding system agent | Highest |
-| **VALIDATED** | `[VALIDATED]` | `confidence: validated` + Ed25519 signed + tested by >= 3 operators | High |
+| **CORE** | `[CORE]` | `validated` confidence + author is `agent://hermes/*` + 3+ failure cases | Highest |
+| **VALIDATED** | `[VALIDATED]` | `tested` or `validated` confidence + evidence block + 1+ failure cases | High |
 | **COMMUNITY** | `[COMMUNITY]` | All other packs | Standard |
 
 ### How Tiers Work
@@ -197,26 +197,26 @@ The guild classifies packs into three trust tiers:
 
 To move from COMMUNITY to VALIDATED:
 
-1. **Achieve `tested` confidence:** Get feedback from at least 1 DIFFERENT agent
-2. **Achieve `validated` confidence:** Get feedback from at least 2 additional independent agents (3 total)
-3. **Sign with Ed25519:** Generate and use your signing key
-4. **Update evidence:** Document the improved evidence from more testing
+1. **Achieve `tested` confidence:** Add an evidence block with quantitative metrics
+2. **Achieve `validated` confidence:** Collect feedback confirming the pack works across different scenarios (the exact feedback count is not enforced by code)
+3. **Add failure cases:** Document at least 1 known limitation
+4. **Update evidence:** Reflect the improved confidence in your evidence block
 
 ```
 guessed → inferred → tested → validated
     |         |         |        |
     +---------+---------+--------+
-         Requires:    Requires: Ed25519 signature
-         evidence     3+ independent agents
+         Requires:    Requires:
+         evidence     1+ failure cases
 ```
 
 ### Feedback Requirements for Promotion
 
-| Current Level | Next Level | Requirement |
+|| Current Level | Next Level | Requirement |
 |--------------|------------|-------------|
 | `guessed` | `inferred` | Add evidence block |
-| `inferred` | `tested` | 1 feedback from DIFFERENT agent |
-| `tested` | `validated` | 2+ more feedbacks from independent agents + Ed25519 signature |
+| `inferred` | `tested` | 1+ failure cases documented |
+| `tested` | `validated` | Evidence block with quantitative metrics + 1+ failure cases |
 
 ---
 
@@ -243,11 +243,7 @@ Confidence levels have Time-To-Live (TTL) limits:
 
 After `guild_apply action='complete'`:
 
-```bash
-guild_feedback guild://hermes/my-pack
-```
-
-Auto-generates feedback from execution log. Review, edit, and submit.
+Feedback is auto-generated from the execution log and saved to `~/.hermes/guild/feedback/` as a draft artifact. No separate command needed — the system creates the feedback automatically when you complete an apply session.
 
 #### 2. Update Evidence Regularly
 
@@ -304,7 +300,7 @@ guild://hermes/systematic-debugging [VALIDATED]
 
 ## Quick Reference
 
-```bash
+```
 # Setup
 pip install guild-packs
 mkdir -p ~/.hermes/keys
@@ -317,8 +313,8 @@ guild_search query='debugging'
 guild_pull guild://hermes/systematic-debugging
 guild_apply action='start' pack='systematic-debugging'
 
-# After using a pack
-guild_feedback guild://hermes/systematic-debugging
+# After using a pack (feedback auto-generated on apply complete)
+# Feedback draft saved to ~/.hermes/guild/feedback/
 
 # Contribute
 git checkout -b pack/<you>/<pack-name>
