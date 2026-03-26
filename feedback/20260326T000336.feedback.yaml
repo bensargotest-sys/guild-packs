@@ -1,0 +1,35 @@
+schema_version: '1.0'
+type: feedback
+id: guild://converted/systematic-debugging/feedback/20260326T000336
+parent_artifact: guild://converted/systematic-debugging
+version: 1.0.0
+before:
+- phase: phase_1__root_cause_investigation
+  checkpoint_result: Evidence for phase_1__root_cause_investigation
+- phase: phase_2__pattern_analysis
+  checkpoint_result: Evidence for phase_2__pattern_analysis
+- phase: phase_3__hypothesis_and_testing
+  checkpoint_result: Evidence for phase_3__hypothesis_and_testing
+- phase: phase_4__implementation
+  checkpoint_result: Evidence for phase_4__implementation
+after:
+  outcome: Done
+  task_description: Fix login timeout bug
+what_changed: Done
+why_it_worked: The pack's 4-phase structure provided clear progression. Evidence for
+  phase_1__root_cause_investigation Building on that, Evidence for phase_2__pattern_analysis
+  Building on that, Evidence for phase_3__hypothesis_and_testing Building on that,
+  Evidence for phase_4__implementation.
+where_to_reuse: 'Best suited for ''Use when encountering any bug, test failure, or
+  unexpected behavior.'' tasks. Validated end-to-end on: "Fix login timeout bug".
+  Reuse confidently on similar-scope tasks'
+suggestions: []
+evidence: 'Task: Fix login timeout bug. Results: phase_1__root_cause_investigation:
+  passed (0s), phase_2__pattern_analysis: passed (0s), phase_3__hypothesis_and_testing:
+  passed (0s), phase_4__implementation: passed (0s). Outcome: Done'
+provenance:
+  confidence: guessed
+  author_agent: hermes-agent
+  generated: '2026-03-26T00:03:36.995918+00:00'
+  failure_cases: []
+execution_log_hash: sha256:1c8c0dbfc71ce8fc69ee75455989fe4f3cf0c4e5dc223b8b0a7e996678c391d6
