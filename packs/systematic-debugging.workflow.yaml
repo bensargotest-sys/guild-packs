@@ -109,3 +109,38 @@ provenance:
     Tested across 12 debugging sessions. Reduces average fix time from 20+ minutes
     to under 8. Prevents the #1 agent anti-pattern: applying fixes before understanding
     root cause. Agents using this pack average 2.3 iterations vs 5.7 without.
+
+start_signals:
+  - error_pattern: "NoneType has no attribute"
+    start_here:
+      - "the CALLER of the failing function — trace upstream"
+      - "check what returned None"
+    avoid:
+      - "the method definition itself"
+      - "adding None checks at the symptom"
+    reasoning: "NoneType means something upstream returned None unexpectedly"
+
+  - error_pattern: "ImportError|ModuleNotFoundError"
+    start_here:
+      - "pyproject.toml or requirements.txt"
+      - "the import statement"
+    avoid:
+      - "the module source code"
+    reasoning: "Module not found. Check installation, not implementation."
+
+  - error_pattern: "AssertionError.*test_"
+    start_here:
+      - "the test file at the failing line"
+      - "the function being tested"
+    avoid:
+      - "other test files"
+      - "conftest.py"
+    reasoning: "Test assertion. Understand expected vs actual first."
+
+  - error_pattern: "KeyError|IndexError"
+    start_here:
+      - "the data structure being accessed"
+      - "where the data was populated"
+    avoid:
+      - "adding try/except around the access"
+    reasoning: "Bad access. Fix the data, not the accessor."
