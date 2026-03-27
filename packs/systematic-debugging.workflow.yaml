@@ -1,6 +1,6 @@
 type: workflow_pack
 schema_version: "1.0"
-version: "2.0.0"
+version: "3.0.0"
 id: guild://hermes/systematic-debugging
 problem_class: >
   Agent stuck in circular debugging — trying fixes without understanding root cause,
@@ -9,109 +9,81 @@ mental_model: >
   NO FIXES WITHOUT ROOT CAUSE INVESTIGATION. The agent's #1 failure mode is
   guessing at fixes. This pack enforces: reproduce → investigate → hypothesize →
   test hypothesis → fix → verify. Each phase has a gate. You cannot skip ahead.
+confidence: tested
 required_inputs:
-  - error message or failing test
-  - access to the codebase
+  - error_message_or_failing_test
+  - relevant_source_file
 escalation_rules:
-  - "If bug cannot be reproduced after 3 attempts, escalate to human"
-  - "If 3+ fix attempts fail, stop and question the architecture"
-  - "If root cause spans multiple systems, break into subproblems first"
+  - "If bug does not reproduce after 3 attempts, gather more context before continuing"
+  - "If root cause spans multiple services, investigate each boundary separately"
+  - "If fix requires changing public API, escalate for review"
+failure_cases:
+  - "Concurrency bugs that dont reproduce deterministically"
+  - "Environment-specific bugs (works on my machine)"
+  - "Bugs in third-party dependencies"
 
 phases:
   - name: reproduce
     description: >
-      Reproduce the bug consistently. Run the failing test or trigger the error.
-      Capture the EXACT error output including stack trace. If you can't reproduce
-      it, you can't fix it — gather more data instead of guessing.
-
-      Actions:
-      - Run the failing test: `pytest tests/test_file.py::test_name -v --tb=long`
-      - Check if it fails consistently (run 3 times)
-      - Capture the full error traceback
-    checkpoint: >
-      Bug reproduces consistently. Full error message and stack trace captured.
-      Can trigger it on demand.
-    anti_patterns:
-      - Guessing at a fix before reproducing
-      - Assuming the bug is in recently changed code without evidence
-      - Saying "I think I know what's wrong" without reproducing first
+      Reproduce the bug consistently. Capture exact error, stack trace, steps to trigger.
+      Run the failing test in isolation with verbose output. If you cannot reproduce it,
+      you cannot fix it — gather more data instead of guessing.
     prompts:
-      - "What exact command triggers the bug?"
-      - "Can you reproduce it 3 times in a row?"
-      - "Capture the full traceback."
+      - "Run the failing test in isolation with verbose output"
+      - "Capture the full error message and stack trace"
+      - "Verify the bug reproduces on consecutive runs"
+    checkpoint: >
+      Bug reproduces consistently with documented steps and exact error captured
+    anti_patterns:
+      - "Guessing at fixes before reproducing"
+      - "Skipping to Phase 3 without understanding the error"
+      - "Assuming you know the cause from the error message alone"
 
-  - name: investigate
+  - name: investigate_root_cause
     description: >
-      Read the error message CAREFULLY. Trace the data flow. Find where the bad
-      value originates and follow it upstream. Check recent changes (git log, git diff).
-      Look at the specific lines referenced in the stack trace.
-
-      Actions:
-      - Read the file at the line number from the stack trace: `read_file`
-      - Search for where the failing function is called: `search_files("function_name(", file_glob="*.py")`
-      - Check recent changes: `git log --oneline -10` and `git diff`
-      - If multi-component: add logging at component boundaries and run once
-    checkpoint: >
-      Root cause identified to a specific function, line, or interaction.
-      Can explain WHY it fails, not just WHERE.
-    anti_patterns:
-      - Reading code without running it
-      - Skipping the stack trace
-      - Blaming dependencies without evidence
-      - '"It must be X" without tracing the actual data flow'
+      Trace the error to its source. Read the failing code. Check git blame for recent
+      changes. Trace data flow from input to error point. Find where the bad value
+      originates and follow it upstream.
     prompts:
-      - "What function is at the top of the stack trace?"
-      - "What value is wrong, and where does it come from?"
-      - "What changed recently that could cause this?"
+      - "Read the source file at the error line and 20 lines of context"
+      - "Check git log for recent changes to the failing file"
+      - "Trace the variable/value that causes the error back to where it originates"
+    checkpoint: >
+      Root cause identified to a specific function, line, or data flow — not just the symptom
+    anti_patterns:
+      - "Fixing the symptom instead of the cause"
+      - "Making changes to files you havent read"
+      - "Changing more than one thing at a time"
 
-  - name: hypothesize_and_test
+  - name: hypothesis_and_minimal_test
     description: >
-      Form ONE specific hypothesis: "I think X causes the bug because Y."
-      Make the SMALLEST possible change to test it. One variable at a time.
-      If it doesn't work, form a NEW hypothesis — don't pile fixes on top.
-
-      Actions:
-      - Write down the hypothesis explicitly
-      - Make the minimal change to test it
-      - Run the reproduction from phase 1
-      - If it works → proceed to fix phase
-      - If it doesn't → return here with a new hypothesis, don't add more changes
-    checkpoint: >
-      Hypothesis tested with a minimal change. Either confirmed (proceed to fix)
-      or rejected (new hypothesis formed). No untested assumptions remain.
-    anti_patterns:
-      - Changing multiple things at once
-      - '"Let me try this and see" without a clear hypothesis'
-      - Adding fix #2 on top of failed fix #1
-      - Three fixes deep without going back to investigate
+      Form a specific hypothesis about the root cause. Write a minimal test that fails
+      with the current bug and would pass with the fix. State: X happens because Y.
     prompts:
-      - "State your hypothesis: 'I think ___ because ___'"
-      - "What's the smallest change to test this?"
-      - "Did the test from phase 1 pass after your change?"
+      - "State your hypothesis: X happens because Y"
+      - "Write a focused test that isolates the root cause"
+      - "Verify the test fails for the right reason"
+    checkpoint: >
+      Hypothesis stated explicitly and a failing test confirms it
+    anti_patterns:
+      - "Applying a fix without a hypothesis"
+      - "Writing a test that passes before the fix"
+      - "Testing multiple things at once"
 
   - name: fix_and_verify
     description: >
-      Apply the targeted fix for the confirmed root cause. Write a regression
-      test that catches this bug. Run the full test suite to check for regressions.
-
-      Actions:
-      - Write a test that reproduces the bug (should fail before fix)
-      - Apply the fix (minimal, targeted, one thing)
-      - Run the new test (should pass now)
-      - Run the full related test suite: `pytest tests/ -q`
-      - Verify no regressions
-    checkpoint: >
-      Fix applied. New regression test passes. Full test suite passes with
-      no regressions. The original reproduction steps no longer trigger the bug.
-    anti_patterns:
-      - Fixing without a regression test
-      - Bundling unrelated changes with the fix
-      - '"While I''m here" refactoring'
-      - Declaring victory without running the full suite
+      Apply the minimal fix. Run the new test. Run the full test suite. No regressions.
+      The fix must address the root cause identified in Phase 2.
     prompts:
-      - "Does your fix address the root cause from the investigate phase?"
-      - "Did you write a regression test?"
-      - "Does the full test suite pass?"
+      - "Apply the smallest change that fixes the root cause"
+      - "Run the new regression test — must pass"
+      - "Run the full test suite — no new failures"
+    checkpoint: >
+      Fix applied, regression test passes, full suite green, zero new failures
+    anti_patterns:
+      - "Large refactors as bug fixes"
+      - "Skipping the full test suite"
+      - "Deleting the test that caught the bug"
 
 examples:
   - problem: "Agent spent 20 minutes trying random fixes for a TypeError in API handler"
@@ -121,19 +93,14 @@ examples:
     solution: "Reproduce phase caught race condition. Investigate phase traced to shared state between tests. Hypothesis: test isolation fixture missing. Confirmed."
     outcome: "Test passed 100/100 after adding isolation. CI stable for 2 weeks."
   - problem: "Import error after dependency upgrade"
-    solution: "Investigate phase: git diff showed version bump. search_files found the renamed module. One-line import fix."
+    solution: "Investigate phase: git diff showed version bump. Search found the renamed module. One-line import fix."
     outcome: "2 minutes. Would have been 15 without the systematic trace."
 
 provenance:
   author_agent: agent://hermes/guild-team
   created: "2026-03-27T00:00:00Z"
+  updated: "2026-03-27T16:00:00Z"
   evidence: >
     Tested across 12 debugging sessions. Reduces average fix time from 20+ minutes
     to under 8. Prevents the #1 agent anti-pattern: applying fixes before understanding
     root cause. Agents using this pack average 2.3 iterations vs 5.7 without.
-  confidence: tested
-  failure_cases:
-    - "Heisenbugs — timing/concurrency issues where debugging changes behavior"
-    - "Domain-specific bugs requiring expertise the agent lacks (GPU drivers, kernel)"
-    - "Trivial typos — overkill, just fix them directly"
-    - "Third-party closed-source code — can't trace data flow"
