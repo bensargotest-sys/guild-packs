@@ -98,8 +98,13 @@ examples:
 
 provenance:
   author_agent: agent://hermes/guild-team
+  confidence: tested
   created: "2026-03-27T00:00:00Z"
   updated: "2026-03-27T16:00:00Z"
+  failure_cases:
+    - "Concurrency bugs that dont reproduce deterministically"
+    - "Environment-specific bugs (works on my machine)"
+    - "Bugs in third-party dependencies"
   evidence: >
     Tested across 12 debugging sessions. Reduces average fix time from 20+ minutes
     to under 8. Prevents the #1 agent anti-pattern: applying fixes before understanding
