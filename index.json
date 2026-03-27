@@ -5,10 +5,10 @@
       "name": "systematic-debugging",
       "type": "workflow_pack",
       "problem_class": "Use when encountering any bug, test failure, or unexpected behavior. 4-phase root cause investigation \u2014 NO fixes without understanding the problem first.",
-      "mental_model": "# Systematic Debugging",
-      "confidence": "tested",
-      "tier": "VALIDATED",
+      "confidence": "inferred",
+      "tier": "COMMUNITY",
       "phase_count": 8,
+      "version": "1.0.0",
       "phase_names": [
         "the_iron_law",
         "the_four_phases",
@@ -19,17 +19,17 @@
         "red_flags___stop_and_follow_process",
         "hermes_agent_integration"
       ],
-      "version": "1.0.0"
+      "mental_model": "# Systematic Debugging"
     },
     {
       "id": "guild://hermes/ascii-art",
       "name": "ascii-art",
       "type": "workflow_pack",
       "problem_class": "Generate ASCII art using pyfiglet (571 fonts), cowsay, boxes, toilet, image-to-ascii, remote APIs (asciified, ascii.co.uk), and LLM fallback. No API keys required.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "tool_1__text_banners__pyfiglet___local",
         "tool_2__text_banners__asciified_api___remote__no_install",
@@ -37,45 +37,46 @@
         "tool_4__boxes__decorative_borders",
         "tool_5__toilet__colored_text_art",
         "tool_6__image_to_ascii_art"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://software-development/code-review-rubric",
       "name": "code-review-rubric",
       "type": "critique_rubric",
-      "domain": "software-development",
-      "criteria_count": 5,
+      "problem_class": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
-      "version": "1.0.0"
+      "phase_count": 0,
+      "version": "1.0.0",
+      "domain": "software-development",
+      "criteria_count": 5
     },
     {
       "id": "guild://hermes/code-review",
       "name": "code-review",
       "type": "workflow_pack",
       "problem_class": "Reviewing code changes (diffs, PRs, or files) for bugs, security vulnerabilities, and quality issues \u2014 producing actionable, severity-ranked feedback",
-      "mental_model": "Effective code review is context-first, not checklist-first. You must understand what the change is trying to do before you can judge whether it does it correctly. Start by building a mental model of the change \u2014 its purpose, scope, and blast radius. Then systematically identify issues across security, correctness, and quality dimensions. Rank every finding by severity so the author knows what must be fixed vs. what's a suggestion. Finally, write a review that is constructive and specific \u2014 every criticism includes a concrete fix or alternative.\n",
-      "confidence": "tested",
-      "tier": "VALIDATED",
+      "confidence": "inferred",
+      "tier": "COMMUNITY",
       "phase_count": 4,
+      "version": "1.0.0",
       "phase_names": [
         "understand_context",
         "identify_issues",
         "assess_severity",
         "write_review"
       ],
-      "version": "1.0.0"
+      "mental_model": "Effective code review is context-first, not checklist-first. You must understand what the change is trying to do before you can judge whether it does it correctly. Start by building a mental model of the change \u2014 its purpose, scope, and blast radius. Then systematically identify issues across security, correctness, and quality dimensions. Rank every finding by severity so the author knows what must be fixed vs. what's a suggestion. Finally, write a review that is constructive and specific \u2014 every criticism includes a concrete fix or alternative.\n"
     },
     {
       "id": "guild://hermes/code-review",
       "name": "code-review",
       "type": "workflow_pack",
       "problem_class": "Guidelines for performing thorough code reviews with security and quality focus",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "review_checklist",
         "review_response_format",
@@ -83,18 +84,17 @@
         "critical_issues__must_fix",
         "suggestions__nice_to_have",
         "questions"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/codebase-inspection",
       "name": "codebase-inspection",
       "type": "workflow_pack",
       "problem_class": "Inspect and analyze codebases using pygount for LOC counting, language breakdown, and code-vs-comment ratios. Use when asked to check lines of code, repo size, language composition, or codebase stats.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "1__basic_summary__most_common",
         "2__common_folder_exclusions",
@@ -102,51 +102,48 @@
         "4__detailed_file_by_file_output",
         "5__output_formats",
         "6__interpreting_results"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/excalidraw",
       "name": "excalidraw",
       "type": "workflow_pack",
       "problem_class": "Create hand-drawn style diagrams using Excalidraw JSON format. Generate .excalidraw files for architecture diagrams, flowcharts, sequence diagrams, concept maps, and more. Files can be opened at excalidraw.com or uploaded for shareable links.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 2,
+      "version": "1.0.0",
       "phase_names": [
         "workflow",
         "element_format_reference"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/github-auth",
       "name": "github-auth",
       "type": "workflow_pack",
       "problem_class": "Set up GitHub authentication for the agent using git (universally available) or the gh CLI. Covers HTTPS tokens, SSH keys, credential helpers, and gh auth \u2014 with a detection flow to pick the right method automatically.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 5,
+      "version": "1.0.0",
       "phase_names": [
         "detection_flow",
         "method_1__git_only_authentication__no_gh__no_sudo",
         "method_2__gh_cli_authentication",
         "using_the_github_api_without_gh",
         "troubleshooting"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/github-code-review",
       "name": "github-code-review",
       "type": "workflow_pack",
       "problem_class": "Review code changes by analyzing git diffs, leaving inline comments on PRs, and performing thorough pre-push review. Works with gh CLI or falls back to git + GitHub REST API via curl.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "1__reviewing_local_changes__pre_push",
         "code_review_summary",
@@ -154,18 +151,17 @@
         "3__review_checklist",
         "4__pre_push_review_workflow",
         "5__pr_review_workflow__end_to_end"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/github-issues",
       "name": "github-issues",
       "type": "workflow_pack",
       "problem_class": "Create, manage, triage, and close GitHub issues. Search existing issues, add labels, assign people, and link to PRs. Works with gh CLI or falls back to git + GitHub REST API via curl.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "1__viewing_issues",
         "2__creating_issues",
@@ -173,18 +169,17 @@
         "expected_behavior",
         "expected_behavior",
         "actual_behavior"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/github-pr-workflow",
       "name": "github-pr-workflow",
       "type": "workflow_pack",
       "problem_class": "Full pull request lifecycle \u2014 create branches, commit changes, open PRs, monitor CI status, auto-fix failures, and merge. Works with gh CLI or falls back to git + GitHub REST API via curl.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "1__branch_creation",
         "2__making_commits",
@@ -192,18 +187,17 @@
         "test_plan",
         "4__monitoring_ci_status",
         "5__auto_fixing_ci_failures"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/github-repo-management",
       "name": "github-repo-management",
       "type": "workflow_pack",
       "problem_class": "Clone, create, fork, configure, and manage GitHub repositories. Manage remotes, secrets, releases, and workflows. Works with gh CLI or falls back to git + GitHub REST API via curl.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "1__cloning_repositories",
         "2__creating_repositories",
@@ -211,77 +205,76 @@
         "4__repository_information",
         "5__repository_settings",
         "6__branch_protection"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/jupyter-live-kernel",
       "name": "jupyter-live-kernel",
       "type": "workflow_pack",
       "problem_class": "Use a live Jupyter kernel for stateful, iterative Python execution via hamelnb. Load this skill when the task involves exploration, iteration, or inspecting intermediate results \u2014 data science, ML experimentation, API exploration, or building up complex code step-by-step. Uses terminal to run CLI commands against a live Jupyter kernel. No new tools required.\n",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 3,
+      "version": "1.0.0",
       "phase_names": [
         "core_workflow",
         "practical_tips_from_experience",
         "timeout_defaults"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://software-development/plan-rubric",
       "name": "plan-rubric",
       "type": "critique_rubric",
-      "domain": "software-development",
-      "criteria_count": 5,
+      "problem_class": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
-      "version": "1.0.0"
+      "phase_count": 0,
+      "version": "1.0.0",
+      "domain": "software-development",
+      "criteria_count": 5
     },
     {
       "id": "guild://hermes/plan",
       "name": "plan",
       "type": "workflow_pack",
       "problem_class": "Plan mode for Hermes \u2014 inspect context, write a markdown plan into the active workspace's `.hermes/plans/` directory, and do not execute the work.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 3,
+      "version": "1.0.0",
       "phase_names": [
         "core_behavior",
         "save_location",
         "interaction_style"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://general/quick-debug",
       "name": "quick-debug",
       "type": "workflow_pack",
       "problem_class": "simple debugging",
-      "mental_model": "Reproduce first, then isolate, then fix. Never guess at a fix without confirming you can see the bug happen. The fastest path to a fix is the shortest path through reproduce \u2192 isolate \u2192 fix \u2192 verify.\n",
-      "confidence": "tested",
-      "tier": "VALIDATED",
+      "confidence": "inferred",
+      "tier": "COMMUNITY",
       "phase_count": 4,
+      "version": "1.0.0",
       "phase_names": [
         "reproduce",
         "isolate",
         "fix",
         "verify"
       ],
-      "version": "1.0.0"
+      "mental_model": "Reproduce first, then isolate, then fix. Never guess at a fix without confirming you can see the bug happen. The fastest path to a fix is the shortest path through reproduce \u2192 isolate \u2192 fix \u2192 verify.\n"
     },
     {
       "id": "guild://hermes/requesting-code-review",
       "name": "requesting-code-review",
       "type": "workflow_pack",
       "problem_class": "Use when completing tasks, implementing major features, or before merging. Validates work meets requirements through systematic review process.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "when_to_request_review",
         "review_process",
@@ -289,18 +282,17 @@
         "review_output_format",
         "review_summary",
         "critical_issues__fix_required"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/subagent-driven-development",
       "name": "subagent-driven-development",
       "type": "workflow_pack",
       "problem_class": "Use when executing implementation plans with independent tasks. Dispatches fresh delegate_task per task with two-stage review (spec compliance then code quality).",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "the_process",
         "task_granularity",
@@ -308,28 +300,29 @@
         "handling_issues",
         "efficiency_notes",
         "integration_with_other_skills"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://software-development/systematic-debugging-rubric",
       "name": "systematic-debugging-rubric",
       "type": "critique_rubric",
-      "domain": "software-development",
-      "criteria_count": 5,
+      "problem_class": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
-      "version": "1.0.0"
+      "phase_count": 0,
+      "version": "1.0.0",
+      "domain": "software-development",
+      "criteria_count": 5
     },
     {
       "id": "guild://converted/systematic-debugging",
       "name": "systematic-debugging",
       "type": "workflow_pack",
       "problem_class": "Use when encountering any bug, test failure, or unexpected behavior. 4-phase root cause investigation \u2014 NO fixes without understanding the problem first.",
-      "mental_model": "# Systematic Debugging",
-      "confidence": "tested",
-      "tier": "VALIDATED",
+      "confidence": "inferred",
+      "tier": "COMMUNITY",
       "phase_count": 8,
+      "version": "1.0.0",
       "phase_names": [
         "the_iron_law",
         "the_four_phases",
@@ -340,34 +333,34 @@
         "red_flags___stop_and_follow_process",
         "hermes_agent_integration"
       ],
-      "version": "1.0.0"
+      "mental_model": "# Systematic Debugging"
     },
     {
       "id": "guild://hermes/test-driven-development",
       "name": "test-driven-development",
       "type": "workflow_pack",
       "problem_class": "Implementing features or fixing bugs using a test-driven development workflow \u2014 writing tests first to define correctness, then implementing the minimal code to pass",
-      "mental_model": "TDD is a thinking tool, not just a testing technique. Writing the test first forces you to define what \"correct\" means before you write a line of implementation. The cycle is strict: Red (write a failing test that defines the requirement), Green (write the minimum code to make it pass), Refactor (clean up without changing behavior). Never write production code without a failing test demanding it. Never refactor while tests are red. This discipline prevents gold-plating, catches regressions immediately, and produces code that is testable by construction.\n",
-      "confidence": "tested",
-      "tier": "VALIDATED",
+      "confidence": "inferred",
+      "tier": "COMMUNITY",
       "phase_count": 4,
+      "version": "1.0.0",
       "phase_names": [
         "understand_requirement",
         "write_failing_test",
         "implement_minimal",
         "refactor_and_verify"
       ],
-      "version": "1.0.0"
+      "mental_model": "TDD is a thinking tool, not just a testing technique. Writing the test first forces you to define what \"correct\" means before you write a line of implementation. The cycle is strict: Red (write a failing test that defines the requirement), Green (write the minimum code to make it pass), Refactor (clean up without changing behavior). Never write production code without a failing test demanding it. Never refactor while tests are red. This discipline prevents gold-plating, catches regressions immediately, and produces code that is testable by construction.\n"
     },
     {
       "id": "guild://hermes/test-driven-development",
       "name": "test-driven-development",
       "type": "workflow_pack",
       "problem_class": "Use when implementing any feature or bugfix, before writing implementation code. Enforces RED-GREEN-REFACTOR cycle with test-first approach.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "the_iron_law",
         "red_green_refactor_cycle",
@@ -375,18 +368,17 @@
         "red_flags___stop_and_start_over",
         "verification_checklist",
         "when_stuck"
-      ],
-      "version": "1.0.0"
+      ]
     },
     {
       "id": "guild://hermes/writing-plans",
       "name": "writing-plans",
       "type": "workflow_pack",
       "problem_class": "Use when you have a spec or requirements for a multi-step task. Creates comprehensive implementation plans with bite-sized tasks, exact file paths, and complete code examples.",
-      "mental_model": "",
       "confidence": "inferred",
       "tier": "COMMUNITY",
       "phase_count": 6,
+      "version": "1.0.0",
       "phase_names": [
         "bite_sized_task_granularity",
         "plan_document_structure",
@@ -394,93 +386,10 @@
         "principles",
         "common_mistakes",
         "execution_handoff"
-      ],
-      "version": "1.0.0"
+      ]
     }
   ],
   "feedback": [],
-  "examples": [
-    {
-      "id": "guild://software-development/code-review-rubric",
-      "name": "code-review-rubric",
-      "type": "critique_rubric",
-      "domain": "software-development",
-      "criteria_count": 5,
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "version": "1.0.0"
-    },
-    {
-      "id": "guild://software-development/code-review",
-      "name": "code-review",
-      "type": "workflow_pack",
-      "problem_class": "Review code changes, pull requests, or existing code for security vulnerabilities, error handling gaps, code quality issues, and testing coverage",
-      "mental_model": "Code review is a security gate first, quality gate second. Every change is a potential attack surface, error source, or maintenance burden. Review in priority order: security, error handling, correctness, then style. Be constructive \u2014 explain why something is an issue and offer a fix, don't just point out problems.\n",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 4,
-      "phase_names": [
-        "security_audit",
-        "error_handling_review",
-        "code_quality_review",
-        "testing_assessment"
-      ],
-      "version": "1.0.0"
-    },
-    {
-      "id": "guild://software-development/plan-rubric",
-      "name": "plan-rubric",
-      "type": "critique_rubric",
-      "domain": "software-development",
-      "criteria_count": 5,
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "version": "1.0.0"
-    },
-    {
-      "id": "guild://software-development/plan",
-      "name": "plan",
-      "type": "workflow_pack",
-      "problem_class": "Create a concrete, actionable implementation plan for a software task without executing any changes",
-      "mental_model": "Planning is thinking made visible. A good plan separates understanding from doing \u2014 inspect the full context first, then write down exactly what to change, in what order, and how to verify each step. The plan is the deliverable, not the code. Plans that are vague or skip verification steps are worse than no plan because they create false confidence.\n",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 4,
-      "phase_names": [
-        "context_inspection",
-        "approach_design",
-        "step_by_step_planning",
-        "plan_delivery"
-      ],
-      "version": "1.0.0"
-    },
-    {
-      "id": "guild://software-development/systematic-debugging-rubric",
-      "name": "systematic-debugging-rubric",
-      "type": "critique_rubric",
-      "domain": "software-development",
-      "criteria_count": 5,
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "version": "1.0.0"
-    },
-    {
-      "id": "guild://hermes/systematic-debugging",
-      "name": "systematic-debugging",
-      "type": "workflow_pack",
-      "problem_class": "Bug fixing, test failures, unexpected behavior \u2014 any technical issue requiring root cause analysis before fix",
-      "mental_model": "NEVER fix without understanding. 4 phases: Investigate \u2192 Pattern \u2192 Hypothesis \u2192 Fix. Each phase has a gate \u2014 you cannot proceed until the gate passes.",
-      "confidence": "tested",
-      "tier": "VALIDATED",
-      "phase_count": 4,
-      "phase_names": [
-        "root_cause_investigation",
-        "pattern_analysis",
-        "hypothesis_testing",
-        "implementation"
-      ],
-      "version": "1.0.0"
-    }
-  ],
-  "updated": "2026-03-25T22:47:58.651612+00:00"
+  "examples": [],
+  "updated": "2026-03-27T10:42:02.564653+00:00"
 }

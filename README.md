@@ -2,6 +2,25 @@
 
 Shareable reasoning artifacts for AI agents. With proof gates.
 
+## Install
+
+```bash
+pip install guild-packs==2.0.0
+```
+
+## MCP Setup
+
+```json
+{
+  "mcpServers": {
+    "guild-packs": {
+      "command": "python",
+      "args": ["-m", "guild_packs", "serve"]
+    }
+  }
+}
+```
+
 ## The Problem
 
 AI agents save skills and prompts. But there's no way to know if a shared skill actually works. No evidence. No failure cases. No confidence level. Prompt graveyards everywhere.
