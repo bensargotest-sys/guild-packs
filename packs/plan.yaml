@@ -64,3 +64,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all plan scenarios
+
+examples:
+  - problem: "Agent wrote a vague plan: 'Add authentication' — subagent couldn't execute it"
+    solution: "writing_process: Specified exact file paths (src/auth.py:45), included complete code examples, verification commands with expected output."
+    outcome: "Subagent executed plan without questions. Task completed in one pass."
+  - problem: "Agent wrote a 20-step plan for renaming a variable — massive over-engineering"
+    solution: "bite_sized_task_granularity: Renamed to 3 steps: find all refs, rename, run tests. Matched detail to actual complexity."
+    outcome: "Plan completed in 10 minutes instead of an hour of unnecessary ceremony."
+  - problem: "Agent started implementing while writing the plan — user wanted to review before any code was written"
+    solution: "core_behavior: Saved plan to .hermes/plans/2026-03-28_rename-auth.md. No project files modified. Replied with plan path for review."
+    outcome: "User reviewed plan, requested changes to error handling approach before implementation started."

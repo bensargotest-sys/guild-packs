@@ -134,3 +134,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all codebase inspection scenarios
+
+examples:
+  - problem: "User asked for LOC count but agent counted node_modules, producing a misleading 500K LOC figure"
+    solution: "1__basic_summary__most_common: Always uses --folders-to-skip with proper exclusions. Correct count: 12K LOC in src/ only."
+    outcome: "Accurate codebase size reported. node_modules excluded from analysis."
+  - problem: "Agent needed to justify a refactoring effort to management — needed language breakdown"
+    solution: "1__basic_summary__most_common + 5__output_formats: Ran pygount --format=json to get programmatic breakdown. Python 67%, TypeScript 23%, YAML 10%."
+    outcome: "Data-driven justification for refactoring timeline. Showed Python dominates."
+  - problem: "Agent was asked if there were duplicate files in a codebase — scanned manually and missed several"
+    solution: "6__interpreting_results: Used __duplicate__ pseudo-language detection. Found 4 duplicate utility files across different directories."
+    outcome: "Duplicates identified in 30 seconds. Manual scan would have taken an hour."

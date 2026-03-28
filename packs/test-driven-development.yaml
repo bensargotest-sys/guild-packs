@@ -225,3 +225,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all test driven development scenarios
+
+examples:
+  - problem: "Agent wrote implementation code first, then wrote tests that passed immediately"
+    solution: "the_iron_law: Deleted the implementation. Wrote failing test first, watched it fail with expected error, then implemented."
+    outcome: "Test actually validates behavior. Bug caught in the RED phase instead of slipping through."
+  - problem: "Agent wrote a test that tested implementation details (mocked everything) — refactoring broke all tests"
+    solution: "red_green_refactor_cycle: Wrote tests against real behavior (test_retries_3_times, not test_mock_was_called). Refactoring didn't break tests."
+    outcome: "Tests survived refactoring. Behavior coverage maintained."
+  - problem: "Agent wrote tests after implementation — found 5 edge cases that implementation didn't handle"
+    solution: "why_order_matters: Test-first discipline would have revealed missing edge cases before code was written. Empty input, null values, boundary conditions all discovered in RED."
+    outcome: "Edge cases handled from start. Test-first would have saved 2 hours of rework."

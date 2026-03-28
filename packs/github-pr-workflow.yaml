@@ -168,3 +168,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all github pr workflow scenarios
+
+examples:
+  - problem: "Agent pushed a branch and created a PR but forgot to add a test plan — CI was never configured"
+    solution: "3__pushing_and_creating_a_pr: Included test plan in PR body with explicit checkboxes. Also added ci/ label to trigger correct workflow."
+    outcome: "CI ran automatically on PR creation. Reviewer had test verification steps."
+  - problem: "CI failed and agent spent an hour manually reproducing the failure locally"
+    solution: "5__auto_fixing_ci_failures: Used gh run view --log-failed to fetch exact error from CI environment. Found missing environment variable."
+    outcome: "Root cause found in 5 minutes from CI logs. Fixed and pushed."
+  - problem: "Agent merged a PR before all CI checks passed — regression got deployed"
+    solution: "4__monitoring_ci_status: Used gh pr checks --watch to wait for all checks. Only merged when state=success."
+    outcome: "CI-blocked merge prevented regression. Stayed red until all checks passed."

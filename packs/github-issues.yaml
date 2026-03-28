@@ -85,3 +85,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all github issues scenarios
+
+examples:
+  - problem: "User reported a bug but agent created an issue with no labels or assignee — it sat unTriaged for a week"
+    solution: "2__creating_issues: Added labels (bug, backend), assignee, and linked to the relevant code file. Used the bug report template with steps to reproduce."
+    outcome: "Issue picked up by backend team within 2 days. Reproducible steps included saved 30 minutes of back-and-forth."
+  - problem: "Agent searched for existing issues about the same bug but got 200 results — too noisy"
+    solution: "1__viewing_issues: Used gh issue list --search with state filter and label filter to narrow results. Found exact duplicate in 30 seconds."
+    outcome: "Linked to existing issue instead of creating duplicate. Closed new report, saved tracker noise."
+  - problem: "User needed to track a production incident — agent created a generic 'fix bug' issue"
+    solution: "2__creating_issues: Created incident-style issue with severity:critical, steps to reproduce, actual vs expected behavior, and asked about rollback options."
+    outcome: "Incident tracked properly with all stakeholders auto-notified via label routing."

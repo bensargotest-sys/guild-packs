@@ -100,3 +100,14 @@ provenance:
   - Languages/frameworks the agent has limited training on
   - Reviews where the architecture is wrong but the code is clean — misses forest
     for trees
+
+examples:
+  - problem: "Agent reviewed a PR and only commented on style issues — missed that user input was passed directly to shell command"
+    solution: "review_checklist Security First phase: checked all user-provided data paths. Found os.system(user_input) without sanitization."
+    outcome: "Critical SQL injection-equivalent vulnerability caught before merge. Fix applied in 10 minutes."
+  - problem: "Agent approved a PR that later caused production outage — error handling was missing on API calls"
+    solution: "review_checklist Error Handling phase: verified all external calls have try/catch. Found missing error handling on 3 API endpoints."
+    outcome: "Issues caught in review, not production. Error handling added before merge."
+  - problem: "Agent reviewed a database migration PR but didn't notice there was no rollback plan"
+    solution: "review_checklist: Noted that migration adds column without backup strategy. Requested rollback plan as blocking issue."
+    outcome: "Rollback script created before merge. Data loss risk eliminated."

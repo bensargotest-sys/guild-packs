@@ -76,3 +76,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all jupyter live kernel scenarios
+
+examples:
+  - problem: "Agent ran a cell that took 10 minutes — hit the default 30s timeout"
+    solution: "timeout_defaults: Retried with --timeout 120 for long-running computation. Used practical_tips_from_experience guidance to set generous timeout."
+    outcome: "Cell completed successfully. Long computation accepted with proper timeout."
+  - problem: "Agent tried to execute code but got timeout errors repeatedly — kernel wasn't initialized"
+    solution: "core_workflow: Discovered session didn't exist. Started Jupyter server via REST API first, then executed code against live kernel."
+    outcome: "Kernel initialized, state persists across execute calls. Workflow succeeded."
+  - problem: "Agent ran cells in wrong order and got NameError — variables from earlier cells weren't defined"
+    solution: "core_workflow: Restarted kernel and ran restart-run-all to verify notebook executes top-to-bottom cleanly. Found missing import in cell 3."
+    outcome: "Execution order issue identified. Notebook fixed to run deterministically."

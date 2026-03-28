@@ -151,3 +151,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all github repo management scenarios
+
+examples:
+  - problem: "Agent cloned a repo with --depth 1 but then needed git log history for debugging — shallow clone was useless"
+    solution: "1__cloning_repositories: Full clone needed. Re-cloned without --depth flag. Then used git log to investigate recent changes."
+    outcome: "Full history available. Shallow clone was an XY problem avoided next time."
+  - problem: "Agent needed to fork a repo but didn't set up upstream remote — later merge conflicts were painful"
+    solution: "3__forking_repositories: Added upstream remote after fork: git remote add upstream https://github.com/original/repo.git. Synced before making changes."
+    outcome: "Clean merge from upstream. No painful rebases later."
+  - problem: "Agent created a repo and pushed code but forgot branch protection — main was pushed to directly"
+    solution: "6__branch_protection: Configured branch protection via API: required_status_checks, required_approving_review_count=1, enforce_admins=false."
+    outcome: "Main branch protected. Direct pushes blocked, PRs required for changes."

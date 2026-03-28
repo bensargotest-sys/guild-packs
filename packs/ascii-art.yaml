@@ -374,3 +374,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all ascii art scenarios
+
+examples:
+  - problem: "Agent used a complex font that rendered poorly on narrow terminals, producing unreadable output"
+    solution: "tool_1__text_banners__pyfiglet___local: Previewed 3 fonts (slant, doom, big) and selected slant for its readability at 80 columns."
+    outcome: "First render was usable. User got clean output instead of wrapped/gibberish characters."
+  - problem: "Agent spent 15 minutes trying to render a long project name that wrapped awkwardly"
+    solution: "tool_1__text_banners__pyfiglet___local: Switched from block font to small font, added -w 120 for wider rendering."
+    outcome: "Clean single-line banner in 2 minutes after font/width adjustment."
+  - problem: "API-based ASCII art failed because special characters weren't URL-encoded"
+    solution: "tool_2__text_banners__asciified_api___remote__no_install: URL-encoded spaces as + and tested with a simple word first."
+    outcome: "API call succeeded on first try after encoding fix."

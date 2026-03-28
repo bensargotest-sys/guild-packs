@@ -207,3 +207,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all subagent driven development scenarios
+
+examples:
+  - problem: "Agent dispatched 3 subagents simultaneously to implement a feature — they overwrote each other's changes"
+    solution: "the_process: Sequential dispatch per task. Each task touches different files (User model, auth utils, login endpoint). No conflicts."
+    outcome: "Clean sequential implementation. Each task completed without merge conflicts."
+  - problem: "Implementer subagent completed task but spec compliance reviewer found it didn't match requirements"
+    solution: "the_process Step 2: Spec compliance review caught missing password_hash field. Implementer fixed before code quality review."
+    outcome: "Spec violation caught early. Fixed in same session, not after merge."
+  - problem: "Agent let implementer self-review their own code — obvious issues were missed"
+    solution: "the_process: Separate reviewer subagent for code quality. Different perspective caught a race condition the implementer missed."
+    outcome: "Two-stage review caught what self-review would have missed. 2 reviewers > 1."

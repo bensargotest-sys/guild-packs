@@ -68,3 +68,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all excalidraw scenarios
+
+examples:
+  - problem: "Agent created a diagram but all shapes were blank — labels weren't showing"
+    solution: "element_format_reference: Fixed by using container binding (boundElements + containerId) instead of the invalid label property on shapes."
+    outcome: "Labels render correctly. Diagram is readable and usable."
+  - problem: "Agent spent 20 minutes hand-calculating coordinates for a flowchart layout"
+    solution: "workflow: Used a simple grid system (x: 100, 300, 500; y: 100, 250, 400) with consistent spacing. Drew boxes first, then connected with arrows."
+    outcome: "Flowchart created in 5 minutes with clean aligned layout."
+  - problem: "Agent uploaded a diagram but it was too large for the share URL limit"
+    solution: "workflow: Reduced element count by consolidating text boxes and simplifying decorative elements. File size dropped from 2MB to 200KB."
+    outcome: "Diagram uploaded successfully and shareable URL generated."

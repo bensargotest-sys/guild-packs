@@ -287,3 +287,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all writing plans scenarios
+
+examples:
+  - problem: "Agent wrote 'Add validation' in the plan — subagent had to ask what kind, where, and how"
+    solution: "writing_process Step 5: Included complete code: def validate_email(email): if '@' not in email: raise ValueError('Invalid email'). Exact file path, copy-paste ready."
+    outcome: "Subagent executed without questions. Implementation matched requirements exactly."
+  - problem: "Agent spent an hour writing a 50-step plan for a simple bug fix"
+    solution: "scope_appropriateness: Simplified to 4 steps matching the actual complexity: write failing test, identify bug, fix, verify. 15 minutes total."
+    outcome: "Plan focused on actual work. User approved quickly, implementation started sooner."
+  - problem: "Agent wrote a plan but didn't include verification steps — subagent thought 'it works' was enough"
+    solution: "writing_process Step 5: Every task ends with: Run pytest tests/x.py -v expected: PASS. Full suite run: expected: 0 new failures."
+    outcome: "Verification explicit. Subagent confirmed tests pass, no regressions introduced."

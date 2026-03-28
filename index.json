@@ -1,395 +1,1831 @@
 {
-  "packs": [
-    {
-      "id": "guild://converted/systematic-debugging",
-      "name": "systematic-debugging",
-      "type": "workflow_pack",
-      "problem_class": "Use when encountering any bug, test failure, or unexpected behavior. 4-phase root cause investigation \u2014 NO fixes without understanding the problem first.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 8,
-      "version": "1.0.0",
-      "phase_names": [
-        "the_iron_law",
-        "the_four_phases",
-        "phase_1__root_cause_investigation",
-        "phase_2__pattern_analysis",
-        "phase_3__hypothesis_and_testing",
-        "phase_4__implementation",
-        "red_flags___stop_and_follow_process",
-        "hermes_agent_integration"
-      ],
-      "mental_model": "# Systematic Debugging"
-    },
-    {
-      "id": "guild://hermes/ascii-art",
-      "name": "ascii-art",
-      "type": "workflow_pack",
-      "problem_class": "Generate ASCII art using pyfiglet (571 fonts), cowsay, boxes, toilet, image-to-ascii, remote APIs (asciified, ascii.co.uk), and LLM fallback. No API keys required.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "tool_1__text_banners__pyfiglet___local",
-        "tool_2__text_banners__asciified_api___remote__no_install",
-        "tool_3__cowsay__message_art",
-        "tool_4__boxes__decorative_borders",
-        "tool_5__toilet__colored_text_art",
-        "tool_6__image_to_ascii_art"
+  "guild://converted/systematic-debugging": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://converted/systematic-debugging",
+    "problem_class": "Use when encountering any bug, test failure, or unexpected behavior. 4-phase root cause investigation \u2014 NO fixes without understanding the problem first.",
+    "mental_model": "# Systematic Debugging",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "the_iron_law",
+        "description": "```\nNO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST\n```\n\nIf you haven't completed Phase 1, you cannot propose fixes.",
+        "checkpoint": "",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "the_four_phases",
+        "description": "You MUST complete each phase before proceeding to the next.\n\n---",
+        "checkpoint": "",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "phase_1__root_cause_investigation",
+        "description": "**BEFORE attempting ANY fix:**\n\n### 1. Read Error Messages Carefully\n\n- Don't skip past errors or warnings\n- They often contain the exact solution\n- Read stack traces completely\n- Note line numbers, file paths, error codes\n\n**Action:** Use `read_file` on the relevant source files. Use `search_files` to find the error string in the codebase.\n\n### 2. Reproduce Consistently\n\n- Can you trigger it reliably?\n- What are the exact steps?\n- Does it happen every time?\n- If not reproducible \u2192 gather more data, don't guess\n\n**Action:** Use the `terminal` tool to run the failing test or trigger the bug:\n\n```bash\n# Run specific failing test\npytest tests/test_module.py::test_name -v\n\n# Run with verbose output\npytest tests/test_module.py -v --tb=long\n```\n\n### 3. Check Recent Changes\n\n- What changed that could cause this?\n- Git diff, recent commits\n- New dependencies, config changes\n\n**Action:**\n\n```bash\n# Recent commits\ngit log --oneline -10\n\n# Uncommitted changes\ngit diff\n\n# Changes in specific file\ngit log -p --follow src/problematic_file.py | head -100\n```\n\n### 4. Gather Evidence in Multi-Component Systems\n\n**WHEN system has multiple components (API \u2192 service \u2192 database, CI \u2192 build \u2192 deploy):**\n\n**BEFORE proposing fixes, add diagnostic instrumentation:**\n\nFor EACH component boundary:\n- Log what data enters the component\n- Log what data exits the component\n- Verify environment/config propagation\n- Check state at each layer\n\nRun once to gather evidence showing WHERE it breaks.\nTHEN analyze evidence to identify the failing component.\nTHEN investigate that specific component.\n\n### 5. Trace Data Flow\n\n**WHEN error is deep in the call stack:**\n\n- Where does the bad value originate?\n- What called this function with the bad value?\n- Keep tracing upstream until you find the source\n- Fix at the source, not at the symptom\n\n**Action:** Use `search_files` to trace references:\n\n```python\n# Find where the function is called\nsearch_files(\"function_name(\", path=\"src/\", file_glob=\"*.py\")\n\n# Find where the variable is set\nsearch_files(\"variable_name\\\\s*=\", path=\"src/\", file_glob=\"*.py\")\n```\n\n### Phase 1 Completion Checklist\n\n- [ ] Error messages fully read and understood\n- [ ] Issue reproduced consistently\n- [ ] Recent changes identified and reviewed\n- [ ] Evidence gathered (logs, state, data flow)\n- [ ] Problem isolated to specific component/code\n- [ ] Root cause hypothesis formed\n\n**STOP:** Do not proceed to Phase 2 until you understand WHY it's happening.\n\n---",
+        "checkpoint": "",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "phase_2__pattern_analysis",
+        "description": "**Find the pattern before fixing:**\n\n### 1. Find Working Examples\n\n- Locate similar working code in the same codebase\n- What works that's similar to what's broken?\n\n**Action:** Use `search_files` to find comparable patterns:\n\n```python\nsearch_files(\"similar_pattern\", path=\"src/\", file_glob=\"*.py\")\n```\n\n### 2. Compare Against References\n\n- If implementing a pattern, read the reference implementation COMPLETELY\n- Don't skim \u2014 read every line\n- Understand the pattern fully before applying\n\n### 3. Identify Differences\n\n- What's different between working and broken?\n- List every difference, however small\n- Don't assume \"that can't matter\"\n\n### 4. Understand Dependencies\n\n- What other components does this need?\n- What settings, config, environment?\n- What assumptions does it make?\n\n---",
+        "checkpoint": "",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "phase_3__hypothesis_and_testing",
+        "description": "**Scientific method:**\n\n### 1. Form a Single Hypothesis\n\n- State clearly: \"I think X is the root cause because Y\"\n- Write it down\n- Be specific, not vague\n\n### 2. Test Minimally\n\n- Make the SMALLEST possible change to test the hypothesis\n- One variable at a time\n- Don't fix multiple things at once\n\n### 3. Verify Before Continuing\n\n- Did it work? \u2192 Phase 4\n- Didn't work? \u2192 Form NEW hypothesis\n- DON'T add more fixes on top\n\n### 4. When You Don't Know\n\n- Say \"I don't understand X\"\n- Don't pretend to know\n- Ask the user for help\n- Research more\n\n---",
+        "checkpoint": "",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "phase_4__implementation",
+        "description": "**Fix the root cause, not the symptom:**\n\n### 1. Create Failing Test Case\n\n- Simplest possible reproduction\n- Automated test if possible\n- MUST have before fixing\n- Use the `test-driven-development` skill\n\n### 2. Implement Single Fix\n\n- Address the root cause identified\n- ONE change at a time\n- No \"while I'm here\" improvements\n- No bundled refactoring\n\n### 3. Verify Fix\n\n```bash\n# Run the specific regression test\npytest tests/test_module.py::test_regression -v\n\n# Run full suite \u2014 no regressions\npytest tests/ -q\n```\n\n### 4. If Fix Doesn't Work \u2014 The Rule of Three\n\n- **STOP.**\n- Count: How many fixes have you tried?\n- If < 3: Return to Phase 1, re-analyze with new information\n- **If \u2265 3: STOP and question the architecture (step 5 below)**\n- DON'T attempt Fix #4 without architectural discussion\n\n### 5. If 3+ Fixes Failed: Question Architecture\n\n**Pattern indicating an architectural problem:**\n- Each fix reveals new shared state/coupling in a different place\n- Fixes require \"massive refactoring\" to implement\n- Each fix creates new symptoms elsewhere\n\n**STOP and question fundamentals:**\n- Is this pattern fundamentally sound?\n- Are we \"sticking with it through sheer inertia\"?\n- Should we refactor the architecture vs. continue fixing symptoms?\n\n**Discuss with the user before attempting more fixes.**\n\nThis is NOT a failed hypothesis \u2014 this is a wrong architecture.\n\n---",
+        "checkpoint": "",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "red_flags___stop_and_follow_process",
+        "description": "If you catch yourself thinking:\n- \"Quick fix for now, investigate later\"\n- \"Just try changing X and see if it works\"\n- \"Add multiple changes, run tests\"\n- \"Skip the test, I'll manually verify\"\n- \"It's probably X, let me fix that\"\n- \"I don't fully understand but this might work\"\n- \"Pattern says X but I'll adapt it differently\"\n- \"Here are the main problems: [lists fixes without investigation]\"\n- Proposing solutions before tracing data flow\n- **\"One more fix attempt\" (when already tried 2+)**\n- **Each fix reveals a new problem in a different place**\n\n**ALL of these mean: STOP. Return to Phase 1.**\n\n**If 3+ fixes failed:** Question the architecture (Phase 4 step 5).",
+        "checkpoint": "",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "hermes_agent_integration",
+        "description": "### Investigation Tools\n\nUse these Hermes tools during Phase 1:\n\n- **`search_files`** \u2014 Find error strings, trace function calls, locate patterns\n- **`read_file`** \u2014 Read source code with line numbers for precise analysis\n- **`terminal`** \u2014 Run tests, check git history, reproduce bugs\n- **`web_search`/`web_extract`** \u2014 Research error messages, library docs\n\n### With delegate_task\n\nFor complex multi-component debugging, dispatch investigation subagents:\n\n```python\ndelegate_task(\n    goal=\"Investigate why [specific test/behavior] fails\",\n    context=\"\"\"\n    Follow systematic-debugging skill:\n    1. Read the error message carefully\n    2. Reproduce the issue\n    3. Trace the data flow to find root cause\n    4. Report findings \u2014 do NOT fix yet\n\n    Error: [paste full error]\n    File: [path to failing code]\n    Test command: [exact command]\n    \"\"\",\n    toolsets=['terminal', 'file']\n)\n```\n\n### With test-driven-development\n\nWhen fixing bugs:\n1. Write a test that reproduces the bug (RED)\n2. Debug systematically to find root cause\n3. Fix the root cause (GREEN)\n4. The test proves the fix and prevents regression",
+        "checkpoint": "",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://guild-init",
+      "created": "2026-03-24T10:29:04.181617+00:00",
+      "evidence": "Reduced average debugging iterations from 5+ to 2-3 across multiple sessions. Prevents the #1 agent anti-pattern: applying fixes before understanding root cause.",
+      "confidence": "tested",
+      "failure_cases": [
+        "Performance/timing bugs where the act of debugging changes behavior (Heisenbugs)",
+        "Issues requiring domain expertise the agent lacks (e.g., GPU driver bugs)",
+        "Problems in third-party closed-source code where source inspection is impossible",
+        "When the user says 'just fix it' and the 4-phase approach feels too slow for a trivial issue"
       ]
     },
-    {
-      "id": "guild://software-development/code-review-rubric",
-      "name": "code-review-rubric",
-      "type": "critique_rubric",
-      "problem_class": "",
+    "examples": [
+      {
+        "problem": "Agent spent 25 minutes applying random fixes to a TypeError in user.py, reverting 4 times",
+        "solution": "Phase 1 forced error reading + git log investigation. Found a recent commit changed a function signature. Phase 2 traced the call site. One-line fix.",
+        "outcome": "5 minutes vs 25 minutes. One targeted fix vs 4 reverted attempts."
+      },
+      {
+        "problem": "Agent added null checks at 6 different call sites for an AttributeError",
+        "solution": "Phase 1 traced the None value upstream via search_files. Found config loader silently returns None for missing keys. Fixed at the source.",
+        "outcome": "Root cause fixed in 2 minutes. 6 unnecessary null checks removed."
+      },
+      {
+        "problem": "Flaky test failed intermittently \u2014 agent assumed it was a timing issue and added sleep() calls",
+        "solution": "Phase 1 reproduce caught the real issue: shared database state between tests. Phase 2 pattern analysis found the test isolation fixture was broken.",
+        "outcome": "Fixed test isolation instead of adding sleeps. 100% pass rate on CI."
+      }
+    ]
+  },
+  "guild://hermes/ascii-art": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/ascii-art",
+    "problem_class": "Generate ASCII art using pyfiglet (571 fonts), cowsay, boxes, toilet, image-to-ascii, remote APIs (asciified, ascii.co.uk), and LLM fallback. No API keys required.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "tool_1__text_banners__pyfiglet___local",
+        "description": "Render text as large ASCII art banners. 571 built-in fonts.\n\n### Setup\n\n```bash\npip install pyfiglet --break-system-packages -q\n```\n\n### Usage\n\n```bash\npython3 -m pyfiglet \"YOUR TEXT\" -f slant\npython3 -m pyfiglet \"TEXT\" -f doom -w 80    # Set width\npython3 -m pyfiglet --list_fonts             # List all 571 fonts\n```\n\n### Recommended fonts\n\n| Style | Font | Best for |\n|-------|------|----------|\n| Clean & modern | `slant` | Project names, headers |\n| Bold & blocky | `doom` | Titles, logos |\n| Big & readable | `big` | Banners |\n| Classic banner | `banner3` | Wide displays |\n| Compact | `small` | Subtitles |\n| Cyberpunk | `cyberlarge` | Tech themes |\n| 3D effect | `3-d` | Splash screens |\n| Gothic | `gothic` | Dramatic text |\n\n### Tips\n\n- Preview 2-3 fonts and let the user pick their favorite\n- Short text (1-8 chars) works best with detailed fonts like `doom` or `block`\n- Long text works better with compact fonts like `small` or `mini`",
+        "checkpoint": "Verify tool 1: text banners (pyfiglet \u2014 local) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "tool_2__text_banners__asciified_api___remote__no_install",
+        "description": "Free REST API that converts text to ASCII art. 250+ FIGlet fonts. Returns plain text directly \u2014 no parsing needed. Use this when pyfiglet is not installed or as a quick alternative.\n\n### Usage (via terminal curl)\n\n```bash\n# Basic text banner (default font)\ncurl -s \"https://asciified.thelicato.io/api/v2/ascii?text=Hello+World\"\n\n# With a specific font\ncurl -s \"https://asciified.thelicato.io/api/v2/ascii?text=Hello&font=Slant\"\ncurl -s \"https://asciified.thelicato.io/api/v2/ascii?text=Hello&font=Doom\"\ncurl -s \"https://asciified.thelicato.io/api/v2/ascii?text=Hello&font=Star+Wars\"\ncurl -s \"https://asciified.thelicato.io/api/v2/ascii?text=Hello&font=3-D\"\ncurl -s \"https://asciified.thelicato.io/api/v2/ascii?text=Hello&font=Banner3\"\n\n# List all available fonts (returns JSON array)\ncurl -s \"https://asciified.thelicato.io/api/v2/fonts\"\n```\n\n### Tips\n\n- URL-encode spaces as `+` in the text parameter\n- The response is plain text ASCII art \u2014 no JSON wrapping, ready to display\n- Font names are case-sensitive; use the fonts endpoint to get exact names\n- Works from any terminal with curl \u2014 no Python or pip needed",
+        "checkpoint": "Verify tool 2: text banners (asciified api \u2014 remote, no install) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "tool_3__cowsay__message_art",
+        "description": "Classic tool that wraps text in a speech bubble with an ASCII character.\n\n### Setup\n\n```bash\nsudo apt install cowsay -y    # Debian/Ubuntu\n# brew install cowsay         # macOS\n```\n\n### Usage\n\n```bash\ncowsay \"Hello World\"\ncowsay -f tux \"Linux rules\"       # Tux the penguin\ncowsay -f dragon \"Rawr!\"          # Dragon\ncowsay -f stegosaurus \"Roar!\"     # Stegosaurus\ncowthink \"Hmm...\"                  # Thought bubble\ncowsay -l                          # List all characters\n```\n\n### Available characters (50+)\n\n`beavis.zen`, `bong`, `bunny`, `cheese`, `daemon`, `default`, `dragon`,\n`dragon-and-cow`, `elephant`, `eyes`, `flaming-skull`, `ghostbusters`,\n`hellokitty`, `kiss`, `kitty`, `koala`, `luke-koala`, `mech-and-cow`,\n`meow`, `moofasa`, `moose`, `ren`, `sheep`, `skeleton`, `small`,\n`stegosaurus`, `stimpy`, `supermilker`, `surgery`, `three-eyes`,\n`turkey`, `turtle`, `tux`, `udder`, `vader`, `vader-koala`, `www`\n\n### Eye/tongue modifiers\n\n```bash\ncowsay -b \"Borg\"       # =_= eyes\ncowsay -d \"Dead\"       # x_x eyes\ncowsay -g \"Greedy\"     # $_$ eyes\ncowsay -p \"Paranoid\"   # @_@ eyes\ncowsay -s \"Stoned\"     # *_* eyes\ncowsay -w \"Wired\"      # O_O eyes\ncowsay -e \"OO\" \"Msg\"   # Custom eyes\ncowsay -T \"U \" \"Msg\"   # Custom tongue\n```",
+        "checkpoint": "Verify tool 3: cowsay (message art) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "tool_4__boxes__decorative_borders",
+        "description": "Draw decorative ASCII art borders/frames around any text. 70+ built-in designs.\n\n### Setup\n\n```bash\nsudo apt install boxes -y    # Debian/Ubuntu\n# brew install boxes         # macOS\n```\n\n### Usage\n\n```bash\necho \"Hello World\" | boxes                    # Default box\necho \"Hello World\" | boxes -d stone           # Stone border\necho \"Hello World\" | boxes -d parchment       # Parchment scroll\necho \"Hello World\" | boxes -d cat             # Cat border\necho \"Hello World\" | boxes -d dog             # Dog border\necho \"Hello World\" | boxes -d unicornsay      # Unicorn\necho \"Hello World\" | boxes -d diamonds        # Diamond pattern\necho \"Hello World\" | boxes -d c-cmt           # C-style comment\necho \"Hello World\" | boxes -d html-cmt        # HTML comment\necho \"Hello World\" | boxes -a c               # Center text\nboxes -l                                       # List all 70+ designs\n```\n\n### Combine with pyfiglet or asciified\n\n```bash\npython3 -m pyfiglet \"HERMES\" -f slant | boxes -d stone\n# Or without pyfiglet installed:\ncurl -s \"https://asciified.thelicato.io/api/v2/ascii?text=HERMES&font=Slant\" | boxes -d stone\n```",
+        "checkpoint": "Verify tool 4: boxes (decorative borders) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "tool_5__toilet__colored_text_art",
+        "description": "Like pyfiglet but with ANSI color effects and visual filters. Great for terminal eye candy.\n\n### Setup\n\n```bash\nsudo apt install toilet toilet-fonts -y    # Debian/Ubuntu\n# brew install toilet                      # macOS\n```\n\n### Usage\n\n```bash\ntoilet \"Hello World\"                    # Basic text art\ntoilet -f bigmono12 \"Hello\"            # Specific font\ntoilet --gay \"Rainbow!\"                 # Rainbow coloring\ntoilet --metal \"Metal!\"                 # Metallic effect\ntoilet -F border \"Bordered\"             # Add border\ntoilet -F border --gay \"Fancy!\"         # Combined effects\ntoilet -f pagga \"Block\"                 # Block-style font (unique to toilet)\ntoilet -F list                          # List available filters\n```\n\n### Filters\n\n`crop`, `gay` (rainbow), `metal`, `flip`, `flop`, `180`, `left`, `right`, `border`\n\n**Note**: toilet outputs ANSI escape codes for colors \u2014 works in terminals but may not render in all contexts (e.g., plain text files, some chat platforms).",
+        "checkpoint": "Verify tool 5: toilet (colored text art) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "tool_6__image_to_ascii_art",
+        "description": "Convert images (PNG, JPEG, GIF, WEBP) to ASCII art.\n\n### Option A: ascii-image-converter (recommended, modern)\n\n```bash\n# Install\nsudo snap install ascii-image-converter\n# OR: go install github.com/TheZoraiz/ascii-image-converter@latest\n```\n\n```bash\nascii-image-converter image.png                  # Basic\nascii-image-converter image.png -C               # Color output\nascii-image-converter image.png -d 60,30         # Set dimensions\nascii-image-converter image.png -b               # Braille characters\nascii-image-converter image.png -n               # Negative/inverted\nascii-image-converter https://url/image.jpg      # Direct URL\nascii-image-converter image.png --save-txt out   # Save as text\n```\n\n### Option B: jp2a (lightweight, JPEG only)\n\n```bash\nsudo apt install jp2a -y\njp2a --width=80 image.jpg\njp2a --colors image.jpg              # Colorized\n```",
+        "checkpoint": "Verify tool 6: image to ascii art is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from ascii-art skill. Requires validation through usage.",
       "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 0,
-      "version": "1.0.0",
-      "domain": "software-development",
-      "criteria_count": 5
-    },
-    {
-      "id": "guild://hermes/code-review",
-      "name": "code-review",
-      "type": "workflow_pack",
-      "problem_class": "Reviewing code changes (diffs, PRs, or files) for bugs, security vulnerabilities, and quality issues \u2014 producing actionable, severity-ranked feedback",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 4,
-      "version": "1.0.0",
-      "phase_names": [
-        "understand_context",
-        "identify_issues",
-        "assess_severity",
-        "write_review"
-      ],
-      "mental_model": "Effective code review is context-first, not checklist-first. You must understand what the change is trying to do before you can judge whether it does it correctly. Start by building a mental model of the change \u2014 its purpose, scope, and blast radius. Then systematically identify issues across security, correctness, and quality dimensions. Rank every finding by severity so the author knows what must be fixed vs. what's a suggestion. Finally, write a review that is constructive and specific \u2014 every criticism includes a concrete fix or alternative.\n"
-    },
-    {
-      "id": "guild://hermes/code-review",
-      "name": "code-review",
-      "type": "workflow_pack",
-      "problem_class": "Guidelines for performing thorough code reviews with security and quality focus",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "review_checklist",
-        "review_response_format",
-        "summary",
-        "critical_issues__must_fix",
-        "suggestions__nice_to_have",
-        "questions"
+      "failure_cases": [
+        "May not apply to all ascii art scenarios"
       ]
     },
-    {
-      "id": "guild://hermes/codebase-inspection",
-      "name": "codebase-inspection",
-      "type": "workflow_pack",
-      "problem_class": "Inspect and analyze codebases using pygount for LOC counting, language breakdown, and code-vs-comment ratios. Use when asked to check lines of code, repo size, language composition, or codebase stats.",
+    "examples": [
+      {
+        "problem": "Agent used a complex font that rendered poorly on narrow terminals, producing unreadable output",
+        "solution": "tool_1__text_banners__pyfiglet___local: Previewed 3 fonts (slant, doom, big) and selected slant for its readability at 80 columns.",
+        "outcome": "First render was usable. User got clean output instead of wrapped/gibberish characters."
+      },
+      {
+        "problem": "Agent spent 15 minutes trying to render a long project name that wrapped awkwardly",
+        "solution": "tool_1__text_banners__pyfiglet___local: Switched from block font to small font, added -w 120 for wider rendering.",
+        "outcome": "Clean single-line banner in 2 minutes after font/width adjustment."
+      },
+      {
+        "problem": "API-based ASCII art failed because special characters weren't URL-encoded",
+        "solution": "tool_2__text_banners__asciified_api___remote__no_install: URL-encoded spaces as + and tested with a simple word first.",
+        "outcome": "API call succeeded on first try after encoding fix."
+      }
+    ]
+  },
+  "guild://software-development/code-review-rubric": {
+    "type": "critique_rubric",
+    "version": "1.0.0",
+    "id": "guild://software-development/code-review-rubric",
+    "domain": "software-development",
+    "criteria": [
+      {
+        "name": "security_coverage",
+        "description": "Did the review identify all security-relevant issues? Were injection, auth, secrets, and input validation all checked?",
+        "weight": 0.3,
+        "scoring": "1.0 = All user input entry points audited. Injection vectors checked. Auth/secrets reviewed. No security issues missed (verified post-merge). 0.5 = Major categories checked but some entry points missed, or findings are surface-level without exploit explanation. 0.0 = Security not reviewed, or critical vulnerability missed that was later exploited.\n",
+        "examples_good": [
+          "Found SQL injection in search endpoint, demonstrated with example payload, suggested parameterized query fix",
+          "Identified that JWT secret was hardcoded in config.py, flagged as critical, suggested environment variable"
+        ],
+        "examples_bad": [
+          "Reviewed code style but didn't notice user input passed directly to shell command",
+          "Said 'looks secure' without checking any specific attack vectors"
+        ]
+      },
+      {
+        "name": "issue_prioritization",
+        "description": "Are issues correctly categorized by severity? Critical security bugs vs. nice-to-have suggestions vs. style nits?",
+        "weight": 0.15,
+        "scoring": "1.0 = Clear severity levels. Critical issues (security, data loss, crashes) separated from suggestions and nits. Actionable fix provided for every critical issue. 0.5 = Issues listed but not prioritized, or severity mislabeled (style issue called critical, or security issue buried in suggestions). 0.0 = Flat list of issues with no priority, or only style nits while security issues exist.\n",
+        "examples_good": [
+          "CRITICAL: SQL injection in /api/search. SUGGESTION: extract duplicate validation logic. NIT: inconsistent naming.",
+          "Must-fix: missing auth check on admin endpoint. Nice-to-have: this function could be simplified."
+        ],
+        "examples_bad": [
+          "Listed 'use const instead of let' as the same priority as 'auth token exposed in URL'",
+          "20 style comments, zero security or correctness observations"
+        ]
+      },
+      {
+        "name": "constructive_feedback",
+        "description": "Does the review explain WHY something is an issue and offer a concrete fix? Is the tone constructive?",
+        "weight": 0.15,
+        "scoring": "1.0 = Every issue includes: what's wrong, why it matters, and a suggested fix or alternative. Tone is constructive. Good patterns in the code are acknowledged. 0.5 = Issues identified but without explanations or fixes. Or explanations provided but tone is dismissive. 0.0 = Just pointing out problems ('this is wrong') with no explanation or suggestion.\n",
+        "examples_good": [
+          "'This query concatenates user input, which allows SQL injection. Use parameterized queries: cursor.execute(\"SELECT * FROM users WHERE id = ?\", (user_id,))'",
+          "'Nice use of the strategy pattern here for payment processors \u2014 clean and extensible.'"
+        ],
+        "examples_bad": [
+          "'This is bad practice.' (no explanation of why or what to do instead)",
+          "'Why would you do it this way?' (dismissive, no constructive alternative)"
+        ]
+      },
+      {
+        "name": "error_handling_coverage",
+        "description": "Did the review check error paths, resource cleanup, and failure modes \u2014 not just the happy path?",
+        "weight": 0.2,
+        "scoring": "1.0 = All external calls checked for error handling. Resource cleanup verified. User-facing error messages reviewed. Logging checked for context without leaks. 0.5 = Some error handling checked but gaps (e.g., file I/O checked but not API calls). 0.0 = Only happy path reviewed. Error handling not mentioned.\n",
+        "examples_good": [
+          "Flagged that database connection is opened but never closed on error path \u2014 suggested context manager",
+          "Noted that API error response includes full stack trace \u2014 suggested sanitized user message"
+        ],
+        "examples_bad": [
+          "Reviewed all the business logic but didn't notice bare 'except: pass' swallowing errors",
+          "Didn't check what happens when the external API returns 500 or times out"
+        ]
+      },
+      {
+        "name": "testing_gap_identification",
+        "description": "Did the review identify missing test coverage, untested edge cases, and branches without assertions?",
+        "weight": 0.2,
+        "scoring": "1.0 = Missing tests identified for new code. Edge cases called out (empty, null, boundary). Untested error paths flagged. Specific test suggestions provided. 0.5 = Tests mentioned generally ('should add tests') but no specific gaps or cases identified. 0.0 = Testing not addressed in the review at all.\n",
+        "examples_good": [
+          "No test for when user_id is None \u2014 this will reach the DB query and throw. Add test_search_with_null_user_id.",
+          "Happy path tested but no test for concurrent access \u2014 add test with threading to verify lock behavior."
+        ],
+        "examples_bad": [
+          "'Add more tests' without specifying what scenarios are missing",
+          "Didn't notice that the test only checks the return value, not the side effects (DB writes, API calls)"
+        ]
+      }
+    ],
+    "pass_threshold": 0.7,
+    "provenance": {
+      "author_agent": "agent://hermes/skill-retrofit-agent",
+      "created": "2026-03-22T21:22:00Z",
+      "evidence": "Derived from the Hermes code-review skill checklist structure. Security weight (0.30) reflects the skill's 'Security First' ordering. Criteria map 1:1 to the skill's four review areas plus its tone guidelines. Constructive feedback criterion encodes the skill's explicit instruction to 'explain why, offer solutions, acknowledge good patterns.'\n",
       "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "1__basic_summary__most_common",
-        "2__common_folder_exclusions",
-        "3__filter_by_specific_language",
-        "4__detailed_file_by_file_output",
-        "5__output_formats",
-        "6__interpreting_results"
-      ]
-    },
-    {
-      "id": "guild://hermes/excalidraw",
-      "name": "excalidraw",
-      "type": "workflow_pack",
-      "problem_class": "Create hand-drawn style diagrams using Excalidraw JSON format. Generate .excalidraw files for architecture diagrams, flowcharts, sequence diagrams, concept maps, and more. Files can be opened at excalidraw.com or uploaded for shareable links.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 2,
-      "version": "1.0.0",
-      "phase_names": [
-        "workflow",
-        "element_format_reference"
-      ]
-    },
-    {
-      "id": "guild://hermes/github-auth",
-      "name": "github-auth",
-      "type": "workflow_pack",
-      "problem_class": "Set up GitHub authentication for the agent using git (universally available) or the gh CLI. Covers HTTPS tokens, SSH keys, credential helpers, and gh auth \u2014 with a detection flow to pick the right method automatically.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 5,
-      "version": "1.0.0",
-      "phase_names": [
-        "detection_flow",
-        "method_1__git_only_authentication__no_gh__no_sudo",
-        "method_2__gh_cli_authentication",
-        "using_the_github_api_without_gh",
-        "troubleshooting"
-      ]
-    },
-    {
-      "id": "guild://hermes/github-code-review",
-      "name": "github-code-review",
-      "type": "workflow_pack",
-      "problem_class": "Review code changes by analyzing git diffs, leaving inline comments on PRs, and performing thorough pre-push review. Works with gh CLI or falls back to git + GitHub REST API via curl.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "1__reviewing_local_changes__pre_push",
-        "code_review_summary",
-        "2__reviewing_a_pull_request_on_github",
-        "3__review_checklist",
-        "4__pre_push_review_workflow",
-        "5__pr_review_workflow__end_to_end"
-      ]
-    },
-    {
-      "id": "guild://hermes/github-issues",
-      "name": "github-issues",
-      "type": "workflow_pack",
-      "problem_class": "Create, manage, triage, and close GitHub issues. Search existing issues, add labels, assign people, and link to PRs. Works with gh CLI or falls back to git + GitHub REST API via curl.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "1__viewing_issues",
-        "2__creating_issues",
-        "steps_to_reproduce",
-        "expected_behavior",
-        "expected_behavior",
-        "actual_behavior"
-      ]
-    },
-    {
-      "id": "guild://hermes/github-pr-workflow",
-      "name": "github-pr-workflow",
-      "type": "workflow_pack",
-      "problem_class": "Full pull request lifecycle \u2014 create branches, commit changes, open PRs, monitor CI status, auto-fix failures, and merge. Works with gh CLI or falls back to git + GitHub REST API via curl.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "1__branch_creation",
-        "2__making_commits",
-        "3__pushing_and_creating_a_pr",
-        "test_plan",
-        "4__monitoring_ci_status",
-        "5__auto_fixing_ci_failures"
-      ]
-    },
-    {
-      "id": "guild://hermes/github-repo-management",
-      "name": "github-repo-management",
-      "type": "workflow_pack",
-      "problem_class": "Clone, create, fork, configure, and manage GitHub repositories. Manage remotes, secrets, releases, and workflows. Works with gh CLI or falls back to git + GitHub REST API via curl.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "1__cloning_repositories",
-        "2__creating_repositories",
-        "3__forking_repositories",
-        "4__repository_information",
-        "5__repository_settings",
-        "6__branch_protection"
-      ]
-    },
-    {
-      "id": "guild://hermes/jupyter-live-kernel",
-      "name": "jupyter-live-kernel",
-      "type": "workflow_pack",
-      "problem_class": "Use a live Jupyter kernel for stateful, iterative Python execution via hamelnb. Load this skill when the task involves exploration, iteration, or inspecting intermediate results \u2014 data science, ML experimentation, API exploration, or building up complex code step-by-step. Uses terminal to run CLI commands against a live Jupyter kernel. No new tools required.\n",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 3,
-      "version": "1.0.0",
-      "phase_names": [
-        "core_workflow",
-        "practical_tips_from_experience",
-        "timeout_defaults"
-      ]
-    },
-    {
-      "id": "guild://software-development/plan-rubric",
-      "name": "plan-rubric",
-      "type": "critique_rubric",
-      "problem_class": "",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 0,
-      "version": "1.0.0",
-      "domain": "software-development",
-      "criteria_count": 5
-    },
-    {
-      "id": "guild://hermes/plan",
-      "name": "plan",
-      "type": "workflow_pack",
-      "problem_class": "Plan mode for Hermes \u2014 inspect context, write a markdown plan into the active workspace's `.hermes/plans/` directory, and do not execute the work.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 3,
-      "version": "1.0.0",
-      "phase_names": [
-        "core_behavior",
-        "save_location",
-        "interaction_style"
-      ]
-    },
-    {
-      "id": "guild://general/quick-debug",
-      "name": "quick-debug",
-      "type": "workflow_pack",
-      "problem_class": "simple debugging",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 4,
-      "version": "1.0.0",
-      "phase_names": [
-        "reproduce",
-        "isolate",
-        "fix",
-        "verify"
-      ],
-      "mental_model": "Reproduce first, then isolate, then fix. Never guess at a fix without confirming you can see the bug happen. The fastest path to a fix is the shortest path through reproduce \u2192 isolate \u2192 fix \u2192 verify.\n"
-    },
-    {
-      "id": "guild://hermes/requesting-code-review",
-      "name": "requesting-code-review",
-      "type": "workflow_pack",
-      "problem_class": "Use when completing tasks, implementing major features, or before merging. Validates work meets requirements through systematic review process.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "when_to_request_review",
-        "review_process",
-        "review_dimensions",
-        "review_output_format",
-        "review_summary",
-        "critical_issues__fix_required"
-      ]
-    },
-    {
-      "id": "guild://hermes/subagent-driven-development",
-      "name": "subagent-driven-development",
-      "type": "workflow_pack",
-      "problem_class": "Use when executing implementation plans with independent tasks. Dispatches fresh delegate_task per task with two-stage review (spec compliance then code quality).",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "the_process",
-        "task_granularity",
-        "red_flags___never_do_these",
-        "handling_issues",
-        "efficiency_notes",
-        "integration_with_other_skills"
-      ]
-    },
-    {
-      "id": "guild://software-development/systematic-debugging-rubric",
-      "name": "systematic-debugging-rubric",
-      "type": "critique_rubric",
-      "problem_class": "",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 0,
-      "version": "1.0.0",
-      "domain": "software-development",
-      "criteria_count": 5
-    },
-    {
-      "id": "guild://converted/systematic-debugging",
-      "name": "systematic-debugging",
-      "type": "workflow_pack",
-      "problem_class": "Use when encountering any bug, test failure, or unexpected behavior. 4-phase root cause investigation \u2014 NO fixes without understanding the problem first.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 8,
-      "version": "1.0.0",
-      "phase_names": [
-        "the_iron_law",
-        "the_four_phases",
-        "phase_1__root_cause_investigation",
-        "phase_2__pattern_analysis",
-        "phase_3__hypothesis_and_testing",
-        "phase_4__implementation",
-        "red_flags___stop_and_follow_process",
-        "hermes_agent_integration"
-      ],
-      "mental_model": "# Systematic Debugging"
-    },
-    {
-      "id": "guild://hermes/test-driven-development",
-      "name": "test-driven-development",
-      "type": "workflow_pack",
-      "problem_class": "Implementing features or fixing bugs using a test-driven development workflow \u2014 writing tests first to define correctness, then implementing the minimal code to pass",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 4,
-      "version": "1.0.0",
-      "phase_names": [
-        "understand_requirement",
-        "write_failing_test",
-        "implement_minimal",
-        "refactor_and_verify"
-      ],
-      "mental_model": "TDD is a thinking tool, not just a testing technique. Writing the test first forces you to define what \"correct\" means before you write a line of implementation. The cycle is strict: Red (write a failing test that defines the requirement), Green (write the minimum code to make it pass), Refactor (clean up without changing behavior). Never write production code without a failing test demanding it. Never refactor while tests are red. This discipline prevents gold-plating, catches regressions immediately, and produces code that is testable by construction.\n"
-    },
-    {
-      "id": "guild://hermes/test-driven-development",
-      "name": "test-driven-development",
-      "type": "workflow_pack",
-      "problem_class": "Use when implementing any feature or bugfix, before writing implementation code. Enforces RED-GREEN-REFACTOR cycle with test-first approach.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "the_iron_law",
-        "red_green_refactor_cycle",
-        "why_order_matters",
-        "red_flags___stop_and_start_over",
-        "verification_checklist",
-        "when_stuck"
-      ]
-    },
-    {
-      "id": "guild://hermes/writing-plans",
-      "name": "writing-plans",
-      "type": "workflow_pack",
-      "problem_class": "Use when you have a spec or requirements for a multi-step task. Creates comprehensive implementation plans with bite-sized tasks, exact file paths, and complete code examples.",
-      "confidence": "inferred",
-      "tier": "COMMUNITY",
-      "phase_count": 6,
-      "version": "1.0.0",
-      "phase_names": [
-        "bite_sized_task_granularity",
-        "plan_document_structure",
-        "writing_process",
-        "principles",
-        "common_mistakes",
-        "execution_handoff"
+      "failure_cases": [
+        "Security coverage weight (0.30) may be too high for internal tools with no user-facing input",
+        "Constructive feedback is subjective \u2014 different evaluators may score tone differently",
+        "Testing gap criterion assumes unit tests are the right testing paradigm \u2014 not always true",
+        "Doesn't measure review thoroughness (did the reviewer read all files, or just skim the diff?)"
       ]
     }
-  ],
-  "feedback": [],
-  "examples": [],
-  "updated": "2026-03-27T10:42:02.564653+00:00"
+  },
+  "guild://hermes/code-review": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/code-review",
+    "problem_class": "Guidelines for performing thorough code reviews with security and quality focus",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "review_checklist",
+        "description": "### 1. Security First\n- [ ] No hardcoded secrets, API accesss, or credentials\n- [ ] Input validation on all user-provided data\n- [ ] SQL queries use parameterized statements (no string concatenation)\n- [ ] File operations validate paths (no path traversal)\n- [ ] Authentication/authorization checks present where needed\n\n### 2. Error Handling\n- [ ] All external calls (API, DB, file) have try/catch\n- [ ] Errors are logged with context (but no sensitive data)\n- [ ] User-facing errors are helpful but don't leak internals\n- [ ] Resources are cleaned up in finally blocks or context managers\n\n### 3. Code Quality\n- [ ] Functions do one thing and are reasonably sized (<50 lines ideal)\n- [ ] Variable names are descriptive (no single letters except loops)\n- [ ] No commented-out code left behind\n- [ ] Complex logic has explanatory comments\n- [ ] No duplicate code (DRY principle)\n\n### 4. Testing Considerations\n- [ ] Edge cases handled (empty inputs, nulls, boundaries)\n- [ ] Happy path and error paths both work\n- [ ] New code has corresponding tests (if test suite exists)",
+        "checkpoint": "Verify review checklist is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "review_response_format",
+        "description": "When providing review feedback, structure it as:\n\n```",
+        "checkpoint": "Verify review response format is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "summary",
+        "description": "[1-2 sentence overall assessment]",
+        "checkpoint": "Verify summary is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "critical_issues__must_fix",
+        "description": "- Issue 1: [description + suggested fix]\n- Issue 2: ...",
+        "checkpoint": "Verify critical issues (must fix) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "suggestions__nice_to_have",
+        "description": "- Suggestion 1: [description]",
+        "checkpoint": "Verify suggestions (nice to have) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "questions",
+        "description": "- [Any clarifying questions about intent]\n```",
+        "checkpoint": "Verify questions is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Security-first ordering catches injection/auth issues that get missed in correctness-first reviews.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "Very large diffs (1000+ lines) where the checklist becomes overwhelming",
+        "Languages/frameworks the agent has limited training on",
+        "Reviews where the architecture is wrong but the code is clean \u2014 misses forest for trees"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent reviewed a PR and only commented on style issues \u2014 missed that user input was passed directly to shell command",
+        "solution": "review_checklist Security First phase: checked all user-provided data paths. Found os.system(user_input) without sanitization.",
+        "outcome": "Critical SQL injection-equivalent vulnerability caught before merge. Fix applied in 10 minutes."
+      },
+      {
+        "problem": "Agent approved a PR that later caused production outage \u2014 error handling was missing on API calls",
+        "solution": "review_checklist Error Handling phase: verified all external calls have try/catch. Found missing error handling on 3 API endpoints.",
+        "outcome": "Issues caught in review, not production. Error handling added before merge."
+      },
+      {
+        "problem": "Agent reviewed a database migration PR but didn't notice there was no rollback plan",
+        "solution": "review_checklist: Noted that migration adds column without backup strategy. Requested rollback plan as blocking issue.",
+        "outcome": "Rollback script created before merge. Data loss risk eliminated."
+      }
+    ]
+  },
+  "guild://hermes/codebase-inspection": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/codebase-inspection",
+    "problem_class": "Inspect and analyze codebases using pygount for LOC counting, language breakdown, and code-vs-comment ratios. Use when asked to check lines of code, repo size, language composition, or codebase stats.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "1__basic_summary__most_common",
+        "description": "Get a full language breakdown with file counts, code lines, and comment lines:\n\n```bash\ncd /path/to/repo\npygount --format=summary \\\n  --folders-to-skip=\".git,node_modules,venv,.venv,__pycache__,.cache,dist,build,.next,.tox,.eggs,*.egg-info\" \\\n  .\n```\n\n**IMPORTANT:** Always use `--folders-to-skip` to exclude dependency/build directories, otherwise pygount will crawl them and take a very long time or hang.",
+        "checkpoint": "Verify 1. basic summary (most common) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "2__common_folder_exclusions",
+        "description": "Adjust based on the project type:\n\n```bash\n# Python projects\n--folders-to-skip=\".git,venv,.venv,__pycache__,.cache,dist,build,.tox,.eggs,.mypy_cache\"\n\n# JavaScript/TypeScript projects\n--folders-to-skip=\".git,node_modules,dist,build,.next,.cache,.turbo,coverage\"\n\n# General catch-all\n--folders-to-skip=\".git,node_modules,venv,.venv,__pycache__,.cache,dist,build,.next,.tox,vendor,third_party\"\n```",
+        "checkpoint": "Verify 2. common folder exclusions is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "3__filter_by_specific_language",
+        "description": "```bash\n# Only count Python files\npygount --suffix=py --format=summary .\n\n# Only count Python and YAML\npygount --suffix=py,yaml,yml --format=summary .\n```",
+        "checkpoint": "Verify 3. filter by specific language is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "4__detailed_file_by_file_output",
+        "description": "```bash\n# Default format shows per-file breakdown\npygount --folders-to-skip=\".git,node_modules,venv\" .\n\n# Sort by code lines (pipe through sort)\npygount --folders-to-skip=\".git,node_modules,venv\" . | sort -t$'\\t' -k1 -nr | head -20\n```",
+        "checkpoint": "Verify 4. detailed file-by-file output is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "5__output_formats",
+        "description": "```bash\n# Summary table (default recommendation)\npygount --format=summary .\n\n# JSON output for programmatic use\npygount --format=json .\n\n# Pipe-friendly: Language, file count, code, docs, empty, string\npygount --format=summary . 2>/dev/null\n```",
+        "checkpoint": "Verify 5. output formats is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "6__interpreting_results",
+        "description": "The summary table columns:\n- **Language** \u2014 detected programming language\n- **Files** \u2014 number of files of that language\n- **Code** \u2014 lines of actual code (executable/declarative)\n- **Comment** \u2014 lines that are comments or documentation\n- **%** \u2014 percentage of total\n\nSpecial pseudo-languages:\n- `__empty__` \u2014 empty files\n- `__binary__` \u2014 binary files (images, compiled, etc.)\n- `__generated__` \u2014 auto-generated files (detected heuristically)\n- `__duplicate__` \u2014 files with identical content\n- `__unknown__` \u2014 unrecognized file types",
+        "checkpoint": "Verify 6. interpreting results is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from codebase-inspection skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all codebase inspection scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "User asked for LOC count but agent counted node_modules, producing a misleading 500K LOC figure",
+        "solution": "1__basic_summary__most_common: Always uses --folders-to-skip with proper exclusions. Correct count: 12K LOC in src/ only.",
+        "outcome": "Accurate codebase size reported. node_modules excluded from analysis."
+      },
+      {
+        "problem": "Agent needed to justify a refactoring effort to management \u2014 needed language breakdown",
+        "solution": "1__basic_summary__most_common + 5__output_formats: Ran pygount --format=json to get programmatic breakdown. Python 67%, TypeScript 23%, YAML 10%.",
+        "outcome": "Data-driven justification for refactoring timeline. Showed Python dominates."
+      },
+      {
+        "problem": "Agent was asked if there were duplicate files in a codebase \u2014 scanned manually and missed several",
+        "solution": "6__interpreting_results: Used __duplicate__ pseudo-language detection. Found 4 duplicate utility files across different directories.",
+        "outcome": "Duplicates identified in 30 seconds. Manual scan would have taken an hour."
+      }
+    ]
+  },
+  "guild://hermes/excalidraw": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/excalidraw",
+    "problem_class": "Create hand-drawn style diagrams using Excalidraw JSON format. Generate .excalidraw files for architecture diagrams, flowcharts, sequence diagrams, concept maps, and more. Files can be opened at excalidraw.com or uploaded for shareable links.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "workflow",
+        "description": "1. **Load this skill** (you already did)\n2. **Write the elements JSON** -- an array of Excalidraw element objects\n3. **Save the file** using `write_file` to create a `.excalidraw` file\n4. **Optionally upload** for a shareable link using `scripts/upload.py` via `terminal`\n\n### Saving a Diagram\n\nWrap your elements array in the standard `.excalidraw` envelope and save with `write_file`:\n\n```json\n{\n  \"type\": \"excalidraw\",\n  \"version\": 2,\n  \"source\": \"hermes-agent\",\n  \"elements\": [ ...your elements array here... ],\n  \"appState\": {\n    \"viewBackgroundColor\": \"#ffffff\"\n  }\n}\n```\n\nSave to any path, e.g. `~/diagrams/my_diagram.excalidraw`.\n\n### Uploading for a Shareable Link\n\nRun the upload script (located in this skill's `scripts/` directory) via terminal:\n\n```bash\npython skills/diagramming/excalidraw/scripts/upload.py ~/diagrams/my_diagram.excalidraw\n```\n\nThis uploads to excalidraw.com (no account needed) and prints a shareable URL. Requires the `cryptography` pip package (`pip install cryptography`).\n\n---",
+        "checkpoint": "Verify workflow is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "element_format_reference",
+        "description": "### Required Fields (all elements)\n`type`, `id` (unique string), `x`, `y`, `width`, `height`\n\n### Defaults (skip these -- they're applied automatically)\n- `strokeColor`: `\"#1e1e1e\"`\n- `backgroundColor`: `\"transparent\"`\n- `fillStyle`: `\"solid\"`\n- `strokeWidth`: `2`\n- `roughness`: `1` (hand-drawn look)\n- `opacity`: `100`\n\nCanvas background is white.\n\n### Element Types\n\n**Rectangle**:\n```json\n{ \"type\": \"rectangle\", \"id\": \"r1\", \"x\": 100, \"y\": 100, \"width\": 200, \"height\": 100 }\n```\n- `roundness: { \"type\": 3 }` for rounded corners\n- `backgroundColor: \"#a5d8ff\"`, `fillStyle: \"solid\"` for filled\n\n**Ellipse**:\n```json\n{ \"type\": \"ellipse\", \"id\": \"e1\", \"x\": 100, \"y\": 100, \"width\": 150, \"height\": 150 }\n```\n\n**Diamond**:\n```json\n{ \"type\": \"diamond\", \"id\": \"d1\", \"x\": 100, \"y\": 100, \"width\": 150, \"height\": 150 }\n```\n\n**Labeled shape (container binding)** -- create a text element bound to the shape:\n\n> **WARNING:** Do NOT use `\"label\": { \"text\": \"...\" }` on shapes. This is NOT a valid\n> Excalidraw property and will be silently ignored, producing blank shapes. You MUST\n> use the container binding approach below.\n\nThe shape needs `boundElements` listing the text, and the text needs `containerId` pointing back:\n```json\n{ \"type\": \"rectangle\", \"id\": \"r1\", \"x\": 100, \"y\": 100, \"width\": 200, \"height\": 80,\n  \"roundness\": { \"type\": 3 }, \"backgroundColor\": \"#a5d8ff\", \"fillStyle\": \"solid\",\n  \"boundElements\": [{ \"id\": \"t_r1\", \"type\": \"text\" }] },\n{ \"type\": \"text\", \"id\": \"t_r1\", \"x\": 105, \"y\": 110, \"width\": 190, \"height\": 25,\n  \"text\": \"Hello\", \"fontSize\": 20, \"fontFamily\": 1, \"strokeColor\": \"#1e1e1e\",\n  \"textAlign\": \"center\", \"verticalAlign\": \"middle\",\n  \"containerId\": \"r1\", \"originalText\": \"Hello\", \"autoResize\": true }\n```\n- Works on rectangle, ellipse, diamond\n- Text is auto-centered by Excalidraw when `containerId` is set\n- The text `x`/`y`/`width`/`height` are approximate -- Excalidraw recalculates them on load\n- `originalText` should match `text`\n- Always include `fontFamily: 1` (Virgil/ha",
+        "checkpoint": "Verify element format reference is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from excalidraw skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all excalidraw scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent created a diagram but all shapes were blank \u2014 labels weren't showing",
+        "solution": "element_format_reference: Fixed by using container binding (boundElements + containerId) instead of the invalid label property on shapes.",
+        "outcome": "Labels render correctly. Diagram is readable and usable."
+      },
+      {
+        "problem": "Agent spent 20 minutes hand-calculating coordinates for a flowchart layout",
+        "solution": "workflow: Used a simple grid system (x: 100, 300, 500; y: 100, 250, 400) with consistent spacing. Drew boxes first, then connected with arrows.",
+        "outcome": "Flowchart created in 5 minutes with clean aligned layout."
+      },
+      {
+        "problem": "Agent uploaded a diagram but it was too large for the share URL limit",
+        "solution": "workflow: Reduced element count by consolidating text boxes and simplifying decorative elements. File size dropped from 2MB to 200KB.",
+        "outcome": "Diagram uploaded successfully and shareable URL generated."
+      }
+    ]
+  },
+  "guild://hermes/github-auth": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/github-auth",
+    "problem_class": "Set up GitHub authentication for the agent using git (universally available) or the gh CLI. Covers HTTPS tokens, SSH keys, credential helpers, and gh auth \u2014 with a detection flow to pick the right method automatically.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "detection_flow",
+        "description": "When a user asks you to work with GitHub, run this check first:\n\n```bash\n# Check what's available\ngit --version\ngh --version 2>/dev/null || echo \"gh not installed\"\n\n# Check if already authenticated\ngh auth status 2>/dev/null || echo \"gh not authenticated\"\ngit config --global credential.helper 2>/dev/null || echo \"no git credential helper\"\n```\n\n**Decision tree:**\n1. If `gh auth status` shows authenticated \u2192 you're good, use `gh` for everything\n2. If `gh` is installed but not authenticated \u2192 use \"gh auth\" method below\n3. If `gh` is not installed \u2192 use \"git-only\" method below (no sudo needed)\n\n---",
+        "checkpoint": "Verify detection flow is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "method_1__git_only_authentication__no_gh__no_sudo",
+        "description": "This works on any machine with `git` installed. No root access needed.\n\n### Option A: HTTPS with auth credential (Recommended)\n\nThis is the most portable method \u2014 works everywhere, no SSH config needed.\n\n**Step 1: Create a auth credential**\n\nTell the user to go to: **https://github.com/settings/tokens**\n\n- Click \"Generate new auth credential (classic)\"\n- Give it a name like \"hermes-agent\"\n- Select scopes:\n  - `repo` (full repository access \u2014 read, write, push, PRs)\n  - `workflow` (trigger and manage GitHub Actions)\n  - `read:org` (if working with organization repos)\n- Set expiration (90 days is a good default)\n- Copy the auth credential \u2014 it won't be shown again\n\n**Step 2: Configure git to store the auth credential**\n\n```bash\n# Set up the credential helper to cache credentials\n# \"store\" saves to ~/.git-credentials in plaintext (simple, persistent)\ngit config --global credential.helper store\n\n# Now do a test operation that triggers auth \u2014 git will prompt for credentials\n# Username: <their-github-username>\n# credential: <paste the auth credential, NOT their GitHub credential>\ngit ls-remote https://github.com/<their-username>/<any-repo>.git\n```\n\nAfter entering credentials once, they're saved and reused for all future operations.\n\n**Alternative: cache helper (credentials expire from memory)**\n\n```bash\n# Cache in memory for 8 hours (28800 seconds) instead of saving to disk\ngit config --global credential.helper 'cache --timeout=28800'\n```\n\n**Alternative: set the auth credential directly in the remote URL (per-repo)**\n\n```bash\n# Embed auth credential in the remote URL (avoids credential prompts entirely)\ngit remote set-url origin https://<username>:<auth credential>@github.com/<owner>/<repo>.git\n```\n\n**Step 3: Configure git identity**\n\n```bash\n# Required for commits \u2014 set name and email\ngit config --global user.name \"Their Name\"\ngit config --global user.email \"their-email@example.com\"\n```\n\n**Step 4: Verify**\n\n```bash\n# Test push access (this should work without any prompts now)\ngit ls-remote https://github.com/<their-",
+        "checkpoint": "Verify method 1: git-only authentication (no gh, no sudo) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "method_2__gh_cli_authentication",
+        "description": "If `gh` is installed, it handles both API access and git credentials in one step.\n\n### Interactive Browser Login (Desktop)\n\n```bash\ngh auth login\n# Select: GitHub.com\n# Select: HTTPS\n# Authenticate via browser\n```\n\n### auth credential-Based Login (Headless / SSH Servers)\n\n```bash\necho \"<THEIR_TOKEN>\" | gh auth login --with-auth credential\n\n# Set up git credentials through gh\ngh auth setup-git\n```\n\n### Verify\n\n```bash\ngh auth status\n```\n\n---",
+        "checkpoint": "Verify method 2: gh cli authentication is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "using_the_github_api_without_gh",
+        "description": "When `gh` is not available, you can still access the full GitHub API using `curl` with a auth credential. This is how the other GitHub skills implement their fallbacks.\n\n### Setting the auth credential for API Calls\n\n```bash\n# Option 1: Export as env var (preferred \u2014 keeps it out of commands)\nexport GITHUB_TOKEN=\"<auth credential>\"\n\n# Then use in curl calls:\ncurl -s -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/user\n```\n\n### Extracting the auth credential from Git Credentials\n\nIf git credentials are already configured (via credential.helper store), the auth credential can be extracted:\n\n```bash\n# Read from git credential store\ngrep \"github.com\" ~/.git-credentials 2>/dev/null | head -1 | sed 's|https://[^:]*:\\([^@]*\\)@.*|\\1|'\n```\n\n### Helper: Detect Auth Method\n\nUse this pattern at the start of any GitHub workflow:\n\n```bash\n# Try gh first, fall back to git + curl\nif command -v gh &>/dev/null && gh auth status &>/dev/null; then\n  echo \"AUTH_METHOD=gh\"\nelif [ -n \"$GITHUB_TOKEN\" ]; then\n  echo \"AUTH_METHOD=curl\"\nelif grep -q \"github.com\" ~/.git-credentials 2>/dev/null; then\n  export GITHUB_TOKEN=$(grep \"github.com\" ~/.git-credentials | head -1 | sed 's|https://[^:]*:\\([^@]*\\)@.*|\\1|')\n  echo \"AUTH_METHOD=curl\"\nelse\n  echo \"AUTH_METHOD=none\"\n  echo \"Need to set up authentication first\"\nfi\n```\n\n---",
+        "checkpoint": "Verify using the github api without gh is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "troubleshooting",
+        "description": "| Problem | Solution |\n|---------|----------|\n| `git push` asks for credential | GitHub disabled credential auth. Use a auth credential as the credential, or switch to SSH |\n| `remote: Permission to X denied` | auth credential may lack `repo` scope \u2014 regenerate with correct scopes |\n| `fatal: Authentication failed` | Cached credentials may be stale \u2014 run `git credential reject` then re-authenticate |\n| `ssh: connect to host github.com port 22: Connection refused` | Try SSH over HTTPS port: add `Host github.com` with `Port 443` and `Hostname ssh.github.com` to `~/.ssh/config` |\n| Credentials not persisting | Check `git config --global credential.helper` \u2014 must be `store` or `cache` |\n| Multiple GitHub accounts | Use SSH with different keys per host alias in `~/.ssh/config`, or per-repo credential URLs |\n| `gh: command not found` + no sudo | Use git-only Method 1 above \u2014 no installation needed |",
+        "checkpoint": "Verify troubleshooting is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from github-auth skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all github auth scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent tried to push to GitHub but got 'fatal: Authentication failed' \u2014 user had forgotten they set up gh CLI",
+        "solution": "detection_flow: Checked gh auth status first. Found gh was installed and authenticated. Switched from git-only to gh commands.",
+        "outcome": "Push succeeded immediately using gh instead of debugging git credential helpers."
+      },
+      {
+        "problem": "User provided a GitHub token but agent couldn't push \u2014 token lacked repo scope",
+        "solution": "method_1__git_only_authentication: Detected permission denied error, identified token scope issue. User regenerated token with repo scope.",
+        "outcome": "Push worked after correct scopes were set. 5 minutes vs 30 minutes of debugging."
+      },
+      {
+        "problem": "Agent on a server with no sudo couldn't install gh, fell back to git-only method",
+        "solution": "method_1__git_only_authentication: Set up credential helper store. Used HTTPS with embedded token. Worked without any installation.",
+        "outcome": "Authentication completed without package manager. Git operations working."
+      }
+    ]
+  },
+  "guild://hermes/github-code-review": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/github-code-review",
+    "problem_class": "Review code changes by analyzing git diffs, leaving inline comments on PRs, and performing thorough pre-push review. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "1__reviewing_local_changes__pre_push",
+        "description": "This is pure `git` \u2014 works everywhere, no API needed.\n\n### Get the Diff\n\n```bash\n# Staged changes (what would be committed)\ngit diff --staged\n\n# All changes vs main (what a PR would contain)\ngit diff main...HEAD\n\n# File names only\ngit diff main...HEAD --name-only\n\n# Stat summary (insertions/deletions per file)\ngit diff main...HEAD --stat\n```\n\n### Review Strategy\n\n1. **Get the big picture first:**\n\n```bash\ngit diff main...HEAD --stat\ngit log main..HEAD --oneline\n```\n\n2. **Review file by file** \u2014 use `read_file` on changed files for full context, and the diff to see what changed:\n\n```bash\ngit diff main...HEAD -- src/auth/login.py\n```\n\n3. **Check for common issues:**\n\n```bash\n# Debug statements, TODOs, console.logs left behind\ngit diff main...HEAD | grep -n \"print(\\|console\\.log\\|TODO\\|FIXME\\|HACK\\|XXX\\|debugger\"\n\n# Large files accidentally staged\ngit diff main...HEAD --stat | sort -t'|' -k2 -rn | head -10\n\n# Secrets or credential patterns\ngit diff main...HEAD | grep -in \"credential\\|sensitive value\\|API access\\|auth credential.*=\\|private_key\"\n\n# Merge conflict markers\ngit diff main...HEAD | grep -n \"<<<<<<\\|>>>>>>\\|=======\"\n```\n\n4. **Present structured feedback** to the user.\n\n### Review Output Format\n\nWhen reviewing local changes, present findings in this structure:\n\n```",
+        "checkpoint": "Verify 1. reviewing local changes (pre-push) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "code_review_summary",
+        "description": "### Critical\n- **src/auth.py:45** \u2014 SQL injection: user input passed directly to query.\n  Suggestion: Use parameterized queries.\n\n### Warnings\n- **src/models/user.py:23** \u2014 credential stored in plaintext. Use bcrypt or argon2.\n- **src/api/routes.py:112** \u2014 No rate limiting on login endpoint.\n\n### Suggestions\n- **src/utils/helpers.py:8** \u2014 Duplicates logic in `src/core/utils.py:34`. Consolidate.\n- **tests/test_auth.py** \u2014 Missing edge case: expired auth credential test.\n\n### Looks Good\n- Clean separation of concerns in the middleware layer\n- Good test coverage for the happy path\n```\n\n---",
+        "checkpoint": "Verify code review summary is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "2__reviewing_a_pull_request_on_github",
+        "description": "### View PR Details\n\n**With gh:**\n\n```bash\ngh pr view 123\ngh pr diff 123\ngh pr diff 123 --name-only\n```\n\n**With git + curl:**\n\n```bash\nPR_NUMBER=123\n\n# Get PR details\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER \\\n  | python3 -c \"\nimport sys, json\npr = json.load(sys.stdin)\nprint(f\\\"Title: {pr['title']}\\\")\nprint(f\\\"Author: {pr['user']['login']}\\\")\nprint(f\\\"Branch: {pr['head']['ref']} -> {pr['base']['ref']}\\\")\nprint(f\\\"State: {pr['state']}\\\")\nprint(f\\\"Body:\\n{pr['body']}\\\")\"\n\n# List changed files\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER/files \\\n  | python3 -c \"\nimport sys, json\nfor f in json.load(sys.stdin):\n    print(f\\\"{f['status']:10} +{f['additions']:-4} -{f['deletions']:-4}  {f['filename']}\\\")\"\n```\n\n### Check Out PR Locally for Full Review\n\nThis works with plain `git` \u2014 no `gh` needed:\n\n```bash\n# Fetch the PR branch and check it out\ngit fetch origin pull/123/head:pr-123\ngit checkout pr-123\n\n# Now you can use read_file, search_files, run tests, etc.\n\n# View diff against the base branch\ngit diff main...pr-123\n```\n\n**With gh (shortcut):**\n\n```bash\ngh pr checkout 123\n```\n\n### Leave Comments on a PR\n\n**General PR comment \u2014 with gh:**\n\n```bash\ngh pr comment 123 --body \"Overall looks good, a few suggestions below.\"\n```\n\n**General PR comment \u2014 with curl:**\n\n```bash\ncurl -s -X POST \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/issues/$PR_NUMBER/comments \\\n  -d '{\"body\": \"Overall looks good, a few suggestions below.\"}'\n```\n\n### Leave Inline Review Comments\n\n**Single inline comment \u2014 with gh (via API):**\n\n```bash\nHEAD_SHA=$(gh pr view 123 --json headRefOid --jq '.headRefOid')\n\ngh api repos/$OWNER/$REPO/pulls/123/comments \\\n  --method POST \\\n  -f body=\"This could be simplified with a list comprehension.\" \\\n  -f path=\"src/auth/login.py\" \\\n  -f commit_id=\"$HEAD_SHA\" \\\n  -f line=45 \\\n  -f side",
+        "checkpoint": "Verify 2. reviewing a pull request on github is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "3__review_checklist",
+        "description": "When performing a code review (local or PR), systematically check:\n\n### Correctness\n- Does the code do what it claims?\n- Edge cases handled (empty inputs, nulls, large data, concurrent access)?\n- Error paths handled gracefully?\n\n### Security\n- No hardcoded secrets, credentials, or API accesss\n- Input validation on user-facing inputs\n- No SQL injection, XSS, or path traversal\n- Auth/authz checks where needed\n\n### Code Quality\n- Clear naming (variables, functions, classes)\n- No unnecessary complexity or premature abstraction\n- DRY \u2014 no duplicated logic that should be extracted\n- Functions are focused (single responsibility)\n\n### Testing\n- New code paths tested?\n- Happy path and error cases covered?\n- Tests readable and maintainable?\n\n### Performance\n- No N+1 queries or unnecessary loops\n- Appropriate caching where beneficial\n- No blocking operations in async code paths\n\n### Documentation\n- Public APIs documented\n- Non-obvious logic has comments explaining \"why\"\n- README updated if behavior changed\n\n---",
+        "checkpoint": "Verify 3. review checklist is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "4__pre_push_review_workflow",
+        "description": "When the user asks you to \"review the code\" or \"check before pushing\":\n\n1. `git diff main...HEAD --stat` \u2014 see scope of changes\n2. `git diff main...HEAD` \u2014 read the full diff\n3. For each changed file, use `read_file` if you need more context\n4. Apply the checklist above\n5. Present findings in the structured format (Critical / Warnings / Suggestions / Looks Good)\n6. If critical issues found, offer to fix them before the user pushes\n\n---",
+        "checkpoint": "Verify 4. pre-push review workflow is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "5__pr_review_workflow__end_to_end",
+        "description": "When the user asks you to \"review PR #N\", \"look at this PR\", or gives you a PR URL, follow this recipe:\n\n### Step 1: Set up environment\n\n```bash\nsource ~/.hermes/skills/github/github-auth/scripts/gh-env.sh\n# Or run the inline setup block from the top of this skill\n```\n\n### Step 2: Gather PR context\n\nGet the PR metadata, description, and list of changed files to understand scope before diving into code.\n\n**With gh:**\n```bash\ngh pr view 123\ngh pr diff 123 --name-only\ngh pr checks 123\n```\n\n**With curl:**\n```bash\nPR_NUMBER=123\n\n# PR details (title, author, description, branch)\ncurl -s -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$GH_OWNER/$GH_REPO/pulls/$PR_NUMBER\n\n# Changed files with line counts\ncurl -s -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$GH_OWNER/$GH_REPO/pulls/$PR_NUMBER/files\n```\n\n### Step 3: Check out the PR locally\n\nThis gives you full access to `read_file`, `search_files`, and the ability to run tests.\n\n```bash\ngit fetch origin pull/$PR_NUMBER/head:pr-$PR_NUMBER\ngit checkout pr-$PR_NUMBER\n```\n\n### Step 4: Read the diff and understand changes\n\n```bash\n# Full diff against the base branch\ngit diff main...HEAD\n\n# Or file-by-file for large PRs\ngit diff main...HEAD --name-only\n# Then for each file:\ngit diff main...HEAD -- path/to/file.py\n```\n\nFor each changed file, use `read_file` to see full context around the changes \u2014 diffs alone can miss issues visible only with surrounding code.\n\n### Step 5: Run automated checks locally (if applicable)\n\n```bash\n# Run tests if there's a test suite\npython -m pytest 2>&1 | tail -20\n# or: npm test, cargo test, go test ./..., etc.\n\n# Run linter if configured\nruff check . 2>&1 | head -30\n# or: eslint, clippy, etc.\n```\n\n### Step 6: Apply the review checklist (Section 3)\n\nGo through each category: Correctness, Security, Code Quality, Testing, Performance, Documentation.\n\n### Step 7: Post the review to GitHub\n\nCollect your findings and submit them as a formal review with in",
+        "checkpoint": "Verify 5. pr review workflow (end-to-end) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from github-code-review skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all github code review scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent reviewed a PR locally but only looked at the diff \u2014 missed that a function was incorrectly called in 3 other files",
+        "solution": "1__reviewing_local_changes__pre_push: For each changed file, used read_file to see full context. Found incorrect function call pattern in related files.",
+        "outcome": "Systematic issue found across codebase, not just in the diff. PR blocked until all call sites fixed."
+      },
+      {
+        "problem": "Agent posted a review to GitHub but didn't check out the PR locally, so couldn't run tests",
+        "solution": "5__pr_review_workflow__end_to_end: Checked out PR locally, ran test suite. Found 2 failing tests that diff alone wouldn't reveal.",
+        "outcome": "CI failures caught before merge. Review posted with full test results."
+      },
+      {
+        "problem": "Agent reviewed a 50-file PR in one pass and missed several issues",
+        "solution": "3__review_checklist: Applied structured checklist (Correctness, Security, Code Quality, Testing, Performance, Documentation) systematically to each file.",
+        "outcome": "All 8 issues found across 6 categories. Organized feedback by severity."
+      }
+    ]
+  },
+  "guild://hermes/github-issues": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/github-issues",
+    "problem_class": "Create, manage, triage, and close GitHub issues. Search existing issues, add labels, assign people, and link to PRs. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "1__viewing_issues",
+        "description": "**With gh:**\n\n```bash\ngh issue list\ngh issue list --state open --label \"bug\"\ngh issue list --assignee @me\ngh issue list --search \"authentication error\" --state all\ngh issue view 42\n```\n\n**With curl:**\n\n```bash\n# List open issues\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  \"https://api.github.com/repos/$OWNER/$REPO/issues?state=open&per_page=20\" \\\n  | python3 -c \"\nimport sys, json\nfor i in json.load(sys.stdin):\n    if 'pull_request' not in i:  # GitHub API returns PRs in /issues too\n        labels = ', '.join(l['name'] for l in i['labels'])\n        print(f\\\"#{i['number']:5}  {i['state']:6}  {labels:30}  {i['title']}\\\")\"\n\n# Filter by label\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  \"https://api.github.com/repos/$OWNER/$REPO/issues?state=open&labels=bug&per_page=20\" \\\n  | python3 -c \"\nimport sys, json\nfor i in json.load(sys.stdin):\n    if 'pull_request' not in i:\n        print(f\\\"#{i['number']}  {i['title']}\\\")\"\n\n# View a specific issue\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/issues/42 \\\n  | python3 -c \"\nimport sys, json\ni = json.load(sys.stdin)\nlabels = ', '.join(l['name'] for l in i['labels'])\nassignees = ', '.join(a['login'] for a in i['assignees'])\nprint(f\\\"#{i['number']}: {i['title']}\\\")\nprint(f\\\"State: {i['state']}  Labels: {labels}  Assignees: {assignees}\\\")\nprint(f\\\"Author: {i['user']['login']}  Created: {i['created_at']}\\\")\nprint(f\\\"\\n{i['body']}\\\")\"\n\n# Search issues\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  \"https://api.github.com/search/issues?q=authentication+error+repo:$OWNER/$REPO\" \\\n  | python3 -c \"\nimport sys, json\nfor i in json.load(sys.stdin)['items']:\n    print(f\\\"#{i['number']}  {i['state']:6}  {i['title']}\\\")\"\n```",
+        "checkpoint": "Verify 1. viewing issues is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "2__creating_issues",
+        "description": "**With gh:**\n\n```bash\ngh issue create \\\n  --title \"Login redirect ignores ?next= parameter\" \\\n  --body \"## Description\nAfter logging in, users always land on /dashboard.",
+        "checkpoint": "Verify 2. creating issues is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "steps_to_reproduce",
+        "description": "1. Navigate to /settings while logged out\n2. Get redirected to /login?next=/settings\n3. Log in\n4. Actual: redirected to /dashboard (should go to /settings)",
+        "checkpoint": "Verify steps to reproduce is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "expected_behavior",
+        "description": "Respect the ?next= query parameter.\" \\\n  --label \"bug,backend\" \\\n  --assignee \"username\"\n```\n\n**With curl:**\n\n```bash\ncurl -s -X POST \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/issues \\\n  -d '{\n    \"title\": \"Login redirect ignores ?next= parameter\",\n    \"body\": \"## Description\\nAfter logging in, users always land on /dashboard.\\n\\n## Steps to Reproduce\\n1. Navigate to /settings while logged out\\n2. Get redirected to /login?next=/settings\\n3. Log in\\n4. Actual: redirected to /dashboard\\n\\n## Expected Behavior\\nRespect the ?next= query parameter.\",\n    \"labels\": [\"bug\", \"backend\"],\n    \"assignees\": [\"username\"]\n  }'\n```\n\n### Bug Report Template\n\n```",
+        "checkpoint": "Verify expected behavior is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "expected_behavior",
+        "description": "<What should happen>",
+        "checkpoint": "Verify expected behavior is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "actual_behavior",
+        "description": "<What actually happens>",
+        "checkpoint": "Verify actual behavior is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from github-issues skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all github issues scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "User reported a bug but agent created an issue with no labels or assignee \u2014 it sat unTriaged for a week",
+        "solution": "2__creating_issues: Added labels (bug, backend), assignee, and linked to the relevant code file. Used the bug report template with steps to reproduce.",
+        "outcome": "Issue picked up by backend team within 2 days. Reproducible steps included saved 30 minutes of back-and-forth."
+      },
+      {
+        "problem": "Agent searched for existing issues about the same bug but got 200 results \u2014 too noisy",
+        "solution": "1__viewing_issues: Used gh issue list --search with state filter and label filter to narrow results. Found exact duplicate in 30 seconds.",
+        "outcome": "Linked to existing issue instead of creating duplicate. Closed new report, saved tracker noise."
+      },
+      {
+        "problem": "User needed to track a production incident \u2014 agent created a generic 'fix bug' issue",
+        "solution": "2__creating_issues: Created incident-style issue with severity:critical, steps to reproduce, actual vs expected behavior, and asked about rollback options.",
+        "outcome": "Incident tracked properly with all stakeholders auto-notified via label routing."
+      }
+    ]
+  },
+  "guild://hermes/github-pr-workflow": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/github-pr-workflow",
+    "problem_class": "Full pull request lifecycle \u2014 create branches, commit changes, open PRs, monitor CI status, auto-fix failures, and merge. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "1__branch_creation",
+        "description": "This part is pure `git` \u2014 identical either way:\n\n```bash\n# Make sure you're up to date\ngit fetch origin\ngit checkout main && git pull origin main\n\n# Create and switch to a new branch\ngit checkout -b feat/add-user-authentication\n```\n\nBranch naming conventions:\n- `feat/description` \u2014 new features\n- `fix/description` \u2014 bug fixes\n- `refactor/description` \u2014 code restructuring\n- `docs/description` \u2014 documentation\n- `ci/description` \u2014 CI/CD changes",
+        "checkpoint": "Verify 1. branch creation is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "2__making_commits",
+        "description": "Use the agent's file tools (`write_file`, `patch`) to make changes, then commit:\n\n```bash\n# Stage specific files\ngit add src/auth.py src/models/user.py tests/test_auth.py\n\n# Commit with a conventional commit message\ngit commit -m \"feat: add JWT-based user authentication\n\n- Add login/register endpoints\n- Add User model with credential hashing\n- Add auth middleware for protected routes\n- Add unit tests for auth flow\"\n```\n\nCommit message format (Conventional Commits):\n```\ntype(scope): short description\n\nLonger explanation if needed. Wrap at 72 characters.\n```\n\nTypes: `feat`, `fix`, `refactor`, `docs`, `test`, `ci`, `chore`, `perf`",
+        "checkpoint": "Verify 2. making commits is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "3__pushing_and_creating_a_pr",
+        "description": "### Push the Branch (same either way)\n\n```bash\ngit push -u origin HEAD\n```\n\n### Create the PR\n\n**With gh:**\n\n```bash\ngh pr create \\\n  --title \"feat: add JWT-based user authentication\" \\\n  --body \"## Summary\n- Adds login and register API endpoints\n- JWT auth credential generation and validation",
+        "checkpoint": "Verify 3. pushing and creating a pr is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "test_plan",
+        "description": "- [ ] Unit tests pass\n\nCloses #42\"\n```\n\nOptions: `--draft`, `--reviewer user1,user2`, `--label \"enhancement\"`, `--base develop`\n\n**With git + curl:**\n\n```bash\nBRANCH=$(git branch --show-current)\n\ncurl -s -X POST \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  -H \"Accept: application/vnd.github.v3+json\" \\\n  https://api.github.com/repos/$OWNER/$REPO/pulls \\\n  -d \"{\n    \\\"title\\\": \\\"feat: add JWT-based user authentication\\\",\n    \\\"body\\\": \\\"## Summary\\nAdds login and register API endpoints.\\n\\nCloses #42\\\",\n    \\\"head\\\": \\\"$BRANCH\\\",\n    \\\"base\\\": \\\"main\\\"\n  }\"\n```\n\nThe response JSON includes the PR `number` \u2014 save it for later commands.\n\nTo create as a draft, add `\"draft\": true` to the JSON body.",
+        "checkpoint": "Verify test plan is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "4__monitoring_ci_status",
+        "description": "### Check CI Status\n\n**With gh:**\n\n```bash\n# One-shot check\ngh pr checks\n\n# Watch until all checks finish (polls every 10s)\ngh pr checks --watch\n```\n\n**With git + curl:**\n\n```bash\n# Get the latest commit SHA on the current branch\nSHA=$(git rev-parse HEAD)\n\n# Query the combined status\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/status \\\n  | python3 -c \"\nimport sys, json\ndata = json.load(sys.stdin)\nprint(f\\\"Overall: {data['state']}\\\")\nfor s in data.get('statuses', []):\n    print(f\\\"  {s['context']}: {s['state']} - {s.get('description', '')}\\\")\"\n\n# Also check GitHub Actions check runs (separate endpoint)\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/check-runs \\\n  | python3 -c \"\nimport sys, json\ndata = json.load(sys.stdin)\nfor cr in data.get('check_runs', []):\n    print(f\\\"  {cr['name']}: {cr['status']} / {cr['conclusion'] or 'pending'}\\\")\"\n```\n\n### Poll Until Complete (git + curl)\n\n```bash\n# Simple polling loop \u2014 check every 30 seconds, up to 10 minutes\nSHA=$(git rev-parse HEAD)\nfor i in $(seq 1 20); do\n  STATUS=$(curl -s \\\n    -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n    https://api.github.com/repos/$OWNER/$REPO/commits/$SHA/status \\\n    | python3 -c \"import sys,json; print(json.load(sys.stdin)['state'])\")\n  echo \"Check $i: $STATUS\"\n  if [ \"$STATUS\" = \"success\" ] || [ \"$STATUS\" = \"failure\" ] || [ \"$STATUS\" = \"error\" ]; then\n    break\n  fi\n  sleep 30\ndone\n```",
+        "checkpoint": "Verify 4. monitoring ci status is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "5__auto_fixing_ci_failures",
+        "description": "When CI fails, diagnose and fix. This loop works with either auth method.\n\n### Step 1: Get Failure Details\n\n**With gh:**\n\n```bash\n# List recent workflow runs on this branch\ngh run list --branch $(git branch --show-current) --limit 5\n\n# View failed logs\ngh run view <RUN_ID> --log-failed\n```\n\n**With git + curl:**\n\n```bash\nBRANCH=$(git branch --show-current)\n\n# List workflow runs on this branch\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  \"https://api.github.com/repos/$OWNER/$REPO/actions/runs?branch=$BRANCH&per_page=5\" \\\n  | python3 -c \"\nimport sys, json\nruns = json.load(sys.stdin)['workflow_runs']\nfor r in runs:\n    print(f\\\"Run {r['id']}: {r['name']} - {r['conclusion'] or r['status']}\\\")\"\n\n# Get failed job logs (download as zip, extract, read)\nRUN_ID=<run_id>\ncurl -s -L \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/actions/runs/$RUN_ID/logs \\\n  -o /tmp/ci-logs.zip\ncd /tmp && unzip -o ci-logs.zip -d ci-logs && cat ci-logs/*.txt\n```\n\n### Step 2: Fix and Push\n\nAfter identifying the issue, use file tools (`patch`, `write_file`) to fix it:\n\n```bash\ngit add <fixed_files>\ngit commit -m \"fix: resolve CI failure in <check_name>\"\ngit push\n```\n\n### Step 3: Verify\n\nRe-check CI status using the commands from Section 4 above.\n\n### Auto-Fix Loop Pattern\n\nWhen asked to auto-fix CI, follow this loop:\n\n1. Check CI status \u2192 identify failures\n2. Read failure logs \u2192 understand the error\n3. Use `read_file` + `patch`/`write_file` \u2192 fix the code\n4. `git add . && git commit -m \"fix: ...\" && git push`\n5. Wait for CI \u2192 re-check status\n6. Repeat if still failing (up to 3 attempts, then ask the user)",
+        "checkpoint": "Verify 5. auto-fixing ci failures is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from github-pr-workflow skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all github pr workflow scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent pushed a branch and created a PR but forgot to add a test plan \u2014 CI was never configured",
+        "solution": "3__pushing_and_creating_a_pr: Included test plan in PR body with explicit checkboxes. Also added ci/ label to trigger correct workflow.",
+        "outcome": "CI ran automatically on PR creation. Reviewer had test verification steps."
+      },
+      {
+        "problem": "CI failed and agent spent an hour manually reproducing the failure locally",
+        "solution": "5__auto_fixing_ci_failures: Used gh run view --log-failed to fetch exact error from CI environment. Found missing environment variable.",
+        "outcome": "Root cause found in 5 minutes from CI logs. Fixed and pushed."
+      },
+      {
+        "problem": "Agent merged a PR before all CI checks passed \u2014 regression got deployed",
+        "solution": "4__monitoring_ci_status: Used gh pr checks --watch to wait for all checks. Only merged when state=success.",
+        "outcome": "CI-blocked merge prevented regression. Stayed red until all checks passed."
+      }
+    ]
+  },
+  "guild://hermes/github-repo-management": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/github-repo-management",
+    "problem_class": "Clone, create, fork, configure, and manage GitHub repositories. Manage remotes, secrets, releases, and workflows. Works with gh CLI or falls back to git + GitHub REST API via curl.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "1__cloning_repositories",
+        "description": "Cloning is pure `git` \u2014 works identically either way:\n\n```bash\n# Clone via HTTPS (works with credential helper or auth credential-embedded URL)\ngit clone https://github.com/owner/repo-name.git\n\n# Clone into a specific directory\ngit clone https://github.com/owner/repo-name.git ./my-local-dir\n\n# Shallow clone (faster for large repos)\ngit clone --depth 1 https://github.com/owner/repo-name.git\n\n# Clone a specific branch\ngit clone --branch develop https://github.com/owner/repo-name.git\n\n# Clone via SSH (if SSH is configured)\ngit clone git@github.com:owner/repo-name.git\n```\n\n**With gh (shorthand):**\n\n```bash\ngh repo clone owner/repo-name\ngh repo clone owner/repo-name -- --depth 1\n```",
+        "checkpoint": "Verify 1. cloning repositories is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "2__creating_repositories",
+        "description": "**With gh:**\n\n```bash\n# Create a public repo and clone it\ngh repo create my-new-project --public --clone\n\n# Private, with description and license\ngh repo create my-new-project --private --description \"A useful tool\" --license MIT --clone\n\n# Under an organization\ngh repo create my-org/my-new-project --public --clone\n\n# From existing local directory\ncd /path/to/existing/project\ngh repo create my-project --source . --public --push\n```\n\n**With git + curl:**\n\n```bash\n# Create the remote repo via API\ncurl -s -X POST \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/user/repos \\\n  -d '{\n    \"name\": \"my-new-project\",\n    \"description\": \"A useful tool\",\n    \"private\": false,\n    \"auto_init\": true,\n    \"license_template\": \"mit\"\n  }'\n\n# Clone it\ngit clone https://github.com/$GH_USER/my-new-project.git\ncd my-new-project\n\n# -- OR -- push an existing local directory to the new repo\ncd /path/to/existing/project\ngit init\ngit add .\ngit commit -m \"Initial commit\"\ngit remote add origin https://github.com/$GH_USER/my-new-project.git\ngit push -u origin main\n```\n\nTo create under an organization:\n\n```bash\ncurl -s -X POST \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/orgs/my-org/repos \\\n  -d '{\"name\": \"my-new-project\", \"private\": false}'\n```\n\n### From a Template\n\n**With gh:**\n\n```bash\ngh repo create my-new-app --template owner/template-repo --public --clone\n```\n\n**With curl:**\n\n```bash\ncurl -s -X POST \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/owner/template-repo/generate \\\n  -d '{\"owner\": \"'\"$GH_USER\"'\", \"name\": \"my-new-app\", \"private\": false}'\n```",
+        "checkpoint": "Verify 2. creating repositories is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "3__forking_repositories",
+        "description": "**With gh:**\n\n```bash\ngh repo fork owner/repo-name --clone\n```\n\n**With git + curl:**\n\n```bash\n# Create the fork via API\ncurl -s -X POST \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/owner/repo-name/forks\n\n# Wait a moment for GitHub to create it, then clone\nsleep 3\ngit clone https://github.com/$GH_USER/repo-name.git\ncd repo-name\n\n# Add the original repo as \"upstream\" remote\ngit remote add upstream https://github.com/owner/repo-name.git\n```\n\n### Keeping a Fork in Sync\n\n```bash\n# Pure git \u2014 works everywhere\ngit fetch upstream\ngit checkout main\ngit merge upstream/main\ngit push origin main\n```\n\n**With gh (shortcut):**\n\n```bash\ngh repo sync $GH_USER/repo-name\n```",
+        "checkpoint": "Verify 3. forking repositories is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "4__repository_information",
+        "description": "**With gh:**\n\n```bash\ngh repo view owner/repo-name\ngh repo list --limit 20\ngh search repos \"machine learning\" --language python --sort stars\n```\n\n**With curl:**\n\n```bash\n# View repo details\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO \\\n  | python3 -c \"\nimport sys, json\nr = json.load(sys.stdin)\nprint(f\\\"Name: {r['full_name']}\\\")\nprint(f\\\"Description: {r['description']}\\\")\nprint(f\\\"Stars: {r['stargazers_count']}  Forks: {r['forks_count']}\\\")\nprint(f\\\"Default branch: {r['default_branch']}\\\")\nprint(f\\\"Language: {r['language']}\\\")\"\n\n# List your repos\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  \"https://api.github.com/user/repos?per_page=20&sort=updated\" \\\n  | python3 -c \"\nimport sys, json\nfor r in json.load(sys.stdin):\n    vis = 'private' if r['private'] else 'public'\n    print(f\\\"  {r['full_name']:40}  {vis:8}  {r.get('language', ''):10}  \u2605{r['stargazers_count']}\\\")\"\n\n# Search repos\ncurl -s \\\n  \"https://api.github.com/search/repositories?q=machine+learning+language:python&sort=stars&per_page=10\" \\\n  | python3 -c \"\nimport sys, json\nfor r in json.load(sys.stdin)['items']:\n    print(f\\\"  {r['full_name']:40}  \u2605{r['stargazers_count']:6}  {r['description'][:60] if r['description'] else ''}\\\")\"\n```",
+        "checkpoint": "Verify 4. repository information is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "5__repository_settings",
+        "description": "**With gh:**\n\n```bash\ngh repo edit --description \"Updated description\" --visibility public\ngh repo edit --enable-wiki=false --enable-issues=true\ngh repo edit --default-branch main\ngh repo edit --add-topic \"machine-learning,python\"\ngh repo edit --enable-auto-merge\n```\n\n**With curl:**\n\n```bash\ncurl -s -X PATCH \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO \\\n  -d '{\n    \"description\": \"Updated description\",\n    \"has_wiki\": false,\n    \"has_issues\": true,\n    \"allow_auto_merge\": true\n  }'\n\n# Update topics\ncurl -s -X PUT \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  -H \"Accept: application/vnd.github.mercy-preview+json\" \\\n  https://api.github.com/repos/$OWNER/$REPO/topics \\\n  -d '{\"names\": [\"machine-learning\", \"python\", \"automation\"]}'\n```",
+        "checkpoint": "Verify 5. repository settings is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "6__branch_protection",
+        "description": "```bash\n# View current protection\ncurl -s \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/branches/main/protection\n\n# Set up branch protection\ncurl -s -X PUT \\\n  -H \"Authorization: auth credential $GITHUB_TOKEN\" \\\n  https://api.github.com/repos/$OWNER/$REPO/branches/main/protection \\\n  -d '{\n    \"required_status_checks\": {\n      \"strict\": true,\n      \"contexts\": [\"ci/test\", \"ci/lint\"]\n    },\n    \"enforce_admins\": false,\n    \"required_pull_request_reviews\": {\n      \"required_approving_review_count\": 1\n    },\n    \"restrictions\": null\n  }'\n```",
+        "checkpoint": "Verify 6. branch protection is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from github-repo-management skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all github repo management scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent cloned a repo with --depth 1 but then needed git log history for debugging \u2014 shallow clone was useless",
+        "solution": "1__cloning_repositories: Full clone needed. Re-cloned without --depth flag. Then used git log to investigate recent changes.",
+        "outcome": "Full history available. Shallow clone was an XY problem avoided next time."
+      },
+      {
+        "problem": "Agent needed to fork a repo but didn't set up upstream remote \u2014 later merge conflicts were painful",
+        "solution": "3__forking_repositories: Added upstream remote after fork: git remote add upstream https://github.com/original/repo.git. Synced before making changes.",
+        "outcome": "Clean merge from upstream. No painful rebases later."
+      },
+      {
+        "problem": "Agent created a repo and pushed code but forgot branch protection \u2014 main was pushed to directly",
+        "solution": "6__branch_protection: Configured branch protection via API: required_status_checks, required_approving_review_count=1, enforce_admins=false.",
+        "outcome": "Main branch protected. Direct pushes blocked, PRs required for changes."
+      }
+    ]
+  },
+  "guild://hermes/jupyter-live-kernel": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/jupyter-live-kernel",
+    "problem_class": "Use a live Jupyter kernel for stateful, iterative Python execution via hamelnb. Load this skill when the task involves exploration, iteration, or inspecting intermediate results \u2014 data science, ML experimentation, API exploration, or building up complex code step-by-step. Uses terminal to run CLI commands against a live Jupyter kernel. No new tools required.\n",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "core_workflow",
+        "description": "All commands return structured JSON. Always use `--compact` to save tokens.\n\n### 1. Discover servers and notebooks\n\n```\nuv run \"$SCRIPT\" servers --compact\nuv run \"$SCRIPT\" notebooks --compact\n```\n\n### 2. Execute code (primary operation)\n\n```\nuv run \"$SCRIPT\" execute --path <notebook.ipynb> --code '<python code>' --compact\n```\n\nState persists across execute calls. Variables, imports, objects all survive.\n\nMulti-line code works with $'...' quoting:\n```\nuv run \"$SCRIPT\" execute --path scratch.ipynb --code $'import os\\nfiles = os.listdir(\".\")\\nprint(f\"Found {len(files)} files\")' --compact\n```\n\n### 3. Inspect live variables\n\n```\nuv run \"$SCRIPT\" variables --path <notebook.ipynb> list --compact\nuv run \"$SCRIPT\" variables --path <notebook.ipynb> preview --name <varname> --compact\n```\n\n### 4. Edit notebook cells\n\n```\n# View current cells\nuv run \"$SCRIPT\" contents --path <notebook.ipynb> --compact\n\n# Insert a new cell\nuv run \"$SCRIPT\" edit --path <notebook.ipynb> insert \\\n  --at-index <N> --cell-type code --source '<code>' --compact\n\n# Replace cell source (use cell-id from contents output)\nuv run \"$SCRIPT\" edit --path <notebook.ipynb> replace-source \\\n  --cell-id <id> --source '<new code>' --compact\n\n# Delete a cell\nuv run \"$SCRIPT\" edit --path <notebook.ipynb> delete --cell-id <id> --compact\n```\n\n### 5. Verification (restart + run all)\n\nOnly use when the user asks for a clean verification or you need to confirm\nthe notebook runs top-to-bottom:\n\n```\nuv run \"$SCRIPT\" restart-run-all --path <notebook.ipynb> --save-outputs --compact\n```",
+        "checkpoint": "Verify core workflow is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "practical_tips_from_experience",
+        "description": "1. **First execution after server start may timeout** \u2014 the kernel needs a moment\n   to initialize. If you get a timeout, just retry.\n\n2. **The kernel Python is JupyterLab's Python** \u2014 packages must be installed in\n   that environment. If you need additional packages, install them into the\n   JupyterLab tool environment first.\n\n3. **--compact flag saves significant tokens** \u2014 always use it. JSON output can\n   be very verbose without it.\n\n4. **For pure REPL use**, create a scratch.ipynb and don't bother with cell editing.\n   Just use `execute` repeatedly.\n\n5. **Argument order matters** \u2014 subcommand flags like `--path` go BEFORE the\n   sub-subcommand. E.g.: `variables --path nb.ipynb list` not `variables list --path nb.ipynb`.\n\n6. **If a session doesn't exist yet**, you need to start one via the REST API\n   (see Setup section). The tool can't execute without a live kernel session.\n\n7. **Errors are returned as JSON** with traceback \u2014 read the `ename` and `evalue`\n   fields to understand what went wrong.\n\n8. **Occasional websocket timeouts** \u2014 some operations may timeout on first try,\n   especially after a kernel restart. Retry once before escalating.",
+        "checkpoint": "Verify practical tips from experience is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "timeout_defaults",
+        "description": "The script has a 30-second default timeout per execution. For long-running\noperations, pass `--timeout 120`. Use generous timeouts (60+) for initial\nsetup or heavy computation.",
+        "checkpoint": "Verify timeout defaults is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from jupyter-live-kernel skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all jupyter live kernel scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent ran a cell that took 10 minutes \u2014 hit the default 30s timeout",
+        "solution": "timeout_defaults: Retried with --timeout 120 for long-running computation. Used practical_tips_from_experience guidance to set generous timeout.",
+        "outcome": "Cell completed successfully. Long computation accepted with proper timeout."
+      },
+      {
+        "problem": "Agent tried to execute code but got timeout errors repeatedly \u2014 kernel wasn't initialized",
+        "solution": "core_workflow: Discovered session didn't exist. Started Jupyter server via REST API first, then executed code against live kernel.",
+        "outcome": "Kernel initialized, state persists across execute calls. Workflow succeeded."
+      },
+      {
+        "problem": "Agent ran cells in wrong order and got NameError \u2014 variables from earlier cells weren't defined",
+        "solution": "core_workflow: Restarted kernel and ran restart-run-all to verify notebook executes top-to-bottom cleanly. Found missing import in cell 3.",
+        "outcome": "Execution order issue identified. Notebook fixed to run deterministically."
+      }
+    ]
+  },
+  "guild://software-development/plan-rubric": {
+    "type": "critique_rubric",
+    "version": "1.0.0",
+    "id": "guild://software-development/plan-rubric",
+    "domain": "software-development",
+    "criteria": [
+      {
+        "name": "context_grounding",
+        "description": "Is the plan grounded in actual codebase inspection? Does it reference real file paths, existing patterns, and current project state \u2014 not assumptions?",
+        "weight": 0.25,
+        "scoring": "1.0 = Plan references specific files, existing patterns, and current state observed through code inspection. Assumptions are explicitly labeled. File paths are real and verified. 0.5 = Some code inspection evident but gaps \u2014 some file paths guessed, some patterns assumed. 0.0 = Plan written without inspecting the codebase. Generic advice that could apply to any project.\n",
+        "examples_good": [
+          "Inspected src/routes/ \u2014 12 REST endpoints using Express Router pattern. WebSocket handler should follow same middleware chain (src/middleware/auth.ts).",
+          "Assumption: tests use Jest (confirmed by jest.config.js and package.json scripts)."
+        ],
+        "examples_bad": [
+          "'Update the API routes' without specifying which files or what the current structure is",
+          "Plan assumes a src/ directory exists when the project uses lib/"
+        ]
+      },
+      {
+        "name": "actionability",
+        "description": "Could a different agent execute this plan without asking clarifying questions? Are steps concrete with specific files, changes, and verification?",
+        "weight": 0.3,
+        "scoring": "1.0 = Every step specifies: file path, what to change/create, and how to verify. Steps are ordered correctly. A different agent could execute without questions. 0.5 = Most steps are concrete but some are vague ('update configuration') or missing verification. 0.0 = Steps are high-level directions, not executable instructions.\n",
+        "examples_good": [
+          "Step 3: Create src/ws/notifications.ts \u2014 export NotificationChannel class with subscribe(userId) and emit(event) methods. Verify: import in test, call subscribe, assert connection established.",
+          "Step 5: Run 'npm test -- --testPathPattern=ws' \u2014 expect all new WebSocket tests green. Then run full suite: 'npm test' \u2014 expect zero new failures."
+        ],
+        "examples_bad": [
+          "'Add WebSocket support' (which files? what functions? how to verify?)",
+          "'Write tests for the new feature' (which tests? what assertions? what test file?)"
+        ]
+      },
+      {
+        "name": "risk_awareness",
+        "description": "Does the plan identify risks, tradeoffs, open questions, and things that could go wrong? Or is it naively optimistic?",
+        "weight": 0.2,
+        "scoring": "1.0 = Risks identified with mitigation strategies. Tradeoffs stated (what you're choosing NOT to do). Open questions listed that could change the approach. Alternative approaches considered. 0.5 = Some risks mentioned but no mitigations, or tradeoffs acknowledged but not analyzed. 0.0 = No risks, tradeoffs, or open questions. Plan assumes everything will work perfectly.\n",
+        "examples_good": [
+          "Risk: socket.io adds 200KB bundle size. Mitigation: could use lighter 'ws' library but lose auto-reconnect. Decision: accept size for reliability.",
+          "Open question: does the deployment environment support WebSocket connections, or is there a proxy that strips Upgrade headers?"
+        ],
+        "examples_bad": [
+          "No risks section at all \u2014 plan reads like everything will work on first try",
+          "'Risks: something might go wrong' (non-specific, not useful)"
+        ]
+      },
+      {
+        "name": "scope_appropriateness",
+        "description": "Is the plan's detail level appropriate for the task? Not a 20-step plan for a one-line fix, not a 3-step plan for a database migration.",
+        "weight": 0.15,
+        "scoring": "1.0 = Detail level matches task complexity. Simple tasks get concise plans. Complex tasks get thorough plans. No unnecessary steps. No missing critical steps. 0.5 = Slightly over- or under-detailed, but all important steps present. 0.0 = Wildly inappropriate scope \u2014 either trivial task with massive plan, or complex task with handwave plan.\n",
+        "examples_good": [
+          "Rename refactor: 3 steps \u2014 find all references, rename, run tests. Done.",
+          "Database migration: 15 steps covering schema, data, validation, cutover, rollback."
+        ],
+        "examples_bad": [
+          "10-step plan with risk analysis for changing a log message",
+          "3-step plan for migrating a database: 'export data, import data, verify'"
+        ]
+      },
+      {
+        "name": "plan_only_discipline",
+        "description": "Did the agent ONLY plan, without executing changes? No file modifications, no mutating commands, no code written outside the plan document.",
+        "weight": 0.1,
+        "scoring": "1.0 = Only read-only operations performed. Plan saved as markdown. No project files modified. 0.5 = Plan delivered but agent also made a small change ('while I was looking, I fixed a typo'). 0.0 = Agent started executing the plan instead of just writing it.\n",
+        "examples_good": [
+          "Used read_file and search_files to inspect. Saved plan to .hermes/plans/. No other files touched."
+        ],
+        "examples_bad": [
+          "Wrote the plan AND created the new file mentioned in step 1",
+          "Ran npm install as part of 'checking if the dependency exists'"
+        ]
+      }
+    ],
+    "pass_threshold": 0.7,
+    "provenance": {
+      "author_agent": "agent://hermes/skill-retrofit-agent",
+      "created": "2026-03-22T21:22:00Z",
+      "evidence": "Derived from the Hermes plan skill v1.0.0 output requirements and core behavior rules. Actionability weight (0.30) reflects the skill's emphasis on 'concrete and actionable' plans. Plan-only discipline criterion directly encodes the skill's prohibition on executing changes during plan mode. Context grounding criterion enforces the skill's instruction to inspect the repo before planning.\n",
+      "confidence": "inferred",
+      "failure_cases": [
+        "Plan-only discipline (0.10) is easy to pass and rarely differentiates \u2014 most agents don't accidentally execute during planning",
+        "Actionability scoring is subjective \u2014 'could another agent execute this' depends on that agent's capabilities",
+        "Risk awareness may penalize plans for simple tasks where risks genuinely don't exist",
+        "Doesn't evaluate whether the proposed approach is actually correct \u2014 only whether the plan is well-structured"
+      ]
+    }
+  },
+  "guild://hermes/plan": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/plan",
+    "problem_class": "Plan mode for Hermes \u2014 inspect context, write a markdown plan into the active workspace's `.hermes/plans/` directory, and do not execute the work.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "core_behavior",
+        "description": "For this turn, you are planning only.\n\n- Do not implement code.\n- Do not edit project files except the plan markdown file.\n- Do not run mutating terminal commands, commit, push, or perform external actions.\n- You may inspect the repo or other context with read-only commands/tools when needed.\n- Your deliverable is a markdown plan saved inside the active workspace under `.hermes/plans/`.",
+        "checkpoint": "Verify core behavior is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "save_location",
+        "description": "Save the plan with `write_file` under:\n- `.hermes/plans/YYYY-MM-DD_HHMMSS-<slug>.md`\n\nTreat that as relative to the active working directory / backend workspace. Hermes file tools are backend-aware, so using this relative path keeps the plan with the workspace on local, docker, ssh, modal, and daytona backends.\n\nIf the runtime provides a specific target path, use that exact path.\nIf not, create a sensible timestamped filename yourself under `.hermes/plans/`.",
+        "checkpoint": "Verify save location is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "interaction_style",
+        "description": "- If the request is clear enough, write the plan directly.\n- If no explicit instruction accompanies `/plan`, infer the task from the current conversation context.\n- If it is genuinely underspecified, ask a brief clarifying question instead of guessing.\n- After saving the plan, reply briefly with what you planned and the saved path.",
+        "checkpoint": "Verify interaction style is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from plan skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all plan scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent wrote a vague plan: 'Add authentication' \u2014 subagent couldn't execute it",
+        "solution": "writing_process: Specified exact file paths (src/auth.py:45), included complete code examples, verification commands with expected output.",
+        "outcome": "Subagent executed plan without questions. Task completed in one pass."
+      },
+      {
+        "problem": "Agent wrote a 20-step plan for renaming a variable \u2014 massive over-engineering",
+        "solution": "bite_sized_task_granularity: Renamed to 3 steps: find all refs, rename, run tests. Matched detail to actual complexity.",
+        "outcome": "Plan completed in 10 minutes instead of an hour of unnecessary ceremony."
+      },
+      {
+        "problem": "Agent started implementing while writing the plan \u2014 user wanted to review before any code was written",
+        "solution": "core_behavior: Saved plan to .hermes/plans/2026-03-28_rename-auth.md. No project files modified. Replied with plan path for review.",
+        "outcome": "User reviewed plan, requested changes to error handling approach before implementation started."
+      }
+    ]
+  },
+  "guild://general/quick-debug": {
+    "type": "workflow_pack",
+    "schema_version": "1.0",
+    "version": "1.0.0",
+    "id": "guild://general/quick-debug",
+    "problem_class": "simple debugging",
+    "mental_model": "Reproduce first, then isolate, then fix. Never guess at a fix without confirming you can see the bug happen. The fastest path to a fix is the shortest path through reproduce \u2192 isolate \u2192 fix \u2192 verify.\n",
+    "required_inputs": [
+      "error message or bug description",
+      "access to the codebase or environment where the bug occurs"
+    ],
+    "phases": [
+      {
+        "name": "reproduce",
+        "description": "Reproduce the bug consistently. Run the failing test, trigger the error, or follow the steps that cause the issue. Capture the exact error output.\n",
+        "checkpoint": "Bug reproduced with consistent steps and exact error captured.",
+        "anti_patterns": [
+          "Guessing at a fix without reproducing",
+          "Assuming the bug is in the most recently changed code",
+          "Changing multiple things at once before confirming reproduction"
+        ],
+        "prompts": [
+          "What exact command or action triggers the bug?",
+          "Can you reproduce it 3 times in a row?",
+          "Capture the full error traceback or output."
+        ]
+      },
+      {
+        "name": "isolate",
+        "description": "Narrow down the cause. Use bisection, print debugging, or divide and conquer to identify the specific line, function, or interaction causing the issue. Rule out at least one hypothesis.\n",
+        "checkpoint": "Root cause identified to a specific function or interaction.",
+        "anti_patterns": [
+          "Changing code before understanding the cause",
+          "Blaming external dependencies without evidence",
+          "Reading code without running it"
+        ],
+        "prompts": [
+          "What are the top 2-3 hypotheses for the cause?",
+          "Can you rule out at least one hypothesis with a quick test?",
+          "Add a targeted log or print to confirm the hypothesis."
+        ]
+      },
+      {
+        "name": "fix",
+        "description": "Apply the minimal targeted fix. Change only what is necessary to resolve the root cause identified in the isolate phase. Do not refactor unrelated code in the same change.\n",
+        "checkpoint": "Fix applied. The original reproduction steps no longer trigger the bug.",
+        "anti_patterns": [
+          "Shotgun debugging \u2014 changing multiple things hoping one works",
+          "Fixing symptoms instead of root cause",
+          "Bundling unrelated changes with the fix"
+        ],
+        "prompts": [
+          "Does this fix address the root cause from the isolate phase?",
+          "Is this the smallest possible change?"
+        ]
+      },
+      {
+        "name": "verify",
+        "description": "Confirm the fix works and nothing else broke. Run the original reproduction steps plus any related tests. Check for regressions.\n",
+        "checkpoint": "Original bug fixed AND no regressions in related tests.",
+        "anti_patterns": [
+          "Only testing the exact reproduction case",
+          "Skipping related test suites",
+          "Declaring victory without running tests"
+        ],
+        "prompts": [
+          "Run the full test suite for the affected module.",
+          "Try edge cases related to the fix."
+        ]
+      }
+    ],
+    "escalation_rules": [
+      "Escalate if bug cannot be reproduced after 3 attempts",
+      "Escalate if root cause spans multiple systems or requires architectural change",
+      "Escalate if fix would break backward compatibility"
+    ],
+    "examples": [
+      {
+        "problem": "Flaky CI test fails 30% of the time with timeout error",
+        "solution": "Reproduced locally with race condition. Isolated to shared state between tests. Fixed by adding test isolation fixture.",
+        "outcome": "Test passed 100/100 runs after fix. CI green for 2 weeks."
+      },
+      {
+        "problem": "API returns 500 on valid input with special characters",
+        "solution": "Reproduced with input containing '&' character. Isolated to URL encoding in query builder. Fixed by adding proper escaping.",
+        "outcome": "Bug fixed. Added 5 edge case tests for special characters."
+      }
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes/ab-agent",
+      "created": "2026-03-23T06:00:00Z",
+      "evidence": "Used on 8 debugging tasks. 7 resolved on first pass, 1 required escalation (architectural issue). Average time to fix: 15 minutes with pack vs 35 minutes without.",
+      "confidence": "tested",
+      "failure_cases": [
+        "Does not help with intermittent timing/concurrency bugs \u2014 reproduce phase may not catch them",
+        "Overkill for trivial typos or syntax errors \u2014 just fix those directly",
+        "Isolation phase assumes access to logs/debugger \u2014 breaks in black-box scenarios"
+      ]
+    }
+  },
+  "guild://hermes/requesting-code-review": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/requesting-code-review",
+    "problem_class": "Use when completing tasks, implementing major features, or before merging. Validates work meets requirements through systematic review process.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "when_to_request_review",
+        "description": "**Mandatory:**\n- After each task in subagent-driven development\n- After completing a major feature\n- Before merge to main\n- After bug fixes\n\n**Optional but valuable:**\n- When stuck (fresh perspective)\n- Before refactoring (baseline check)\n- After complex logic implementation\n- When touching critical code (auth, payments, data)\n\n**Never skip because:**\n- \"It's simple\" \u2014 simple bugs compound\n- \"I'm in a hurry\" \u2014 reviews save time\n- \"I tested it\" \u2014 you have blind spots",
+        "checkpoint": "Verify when to request review is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "review_process",
+        "description": "### Step 1: Self-Review First\n\nBefore dispatching a reviewer, check yourself:\n\n- [ ] Code follows project conventions\n- [ ] All tests pass\n- [ ] No debug print statements left\n- [ ] No hardcoded secrets or credentials\n- [ ] Error handling in place\n- [ ] Commit messages are clear\n\n```bash\n# Run full test suite\npytest tests/ -q\n\n# Check for debug code\nsearch_files(\"print(\", path=\"src/\", file_glob=\"*.py\")\nsearch_files(\"console.log\", path=\"src/\", file_glob=\"*.js\")\n\n# Check for TODOs\nsearch_files(\"TODO|FIXME|HACK\", path=\"src/\")\n```\n\n### Step 2: Gather Context\n\n```bash\n# Changed files\ngit diff --name-only HEAD~1\n\n# Diff summary\ngit diff --stat HEAD~1\n\n# Recent commits\ngit log --oneline -5\n```\n\n### Step 3: Dispatch Reviewer Subagent\n\nUse `delegate_task` to dispatch a focused reviewer:\n\n```python\ndelegate_task(\n    goal=\"Review implementation for correctness and quality\",\n    context=\"\"\"\n    WHAT WAS IMPLEMENTED:\n    [Brief description of the feature/fix]\n\n    ORIGINAL REQUIREMENTS:\n    [From plan, issue, or user request]\n\n    FILES CHANGED:\n    - src/models/user.py (added User class)\n    - src/auth/login.py (added login endpoint)\n    - tests/test_auth.py (added 8 tests)\n\n    REVIEW CHECKLIST:\n    - [ ] Correctness: Does it do what it should?\n    - [ ] Edge cases: Are they handled?\n    - [ ] Error handling: Is it adequate?\n    - [ ] Code quality: Clear names, good structure?\n    - [ ] Test coverage: Are tests meaningful?\n    - [ ] Security: Any vulnerabilities?\n    - [ ] Performance: Any obvious issues?\n\n    OUTPUT FORMAT:\n    - Summary: [brief assessment]\n    - Critical Issues: [must fix \u2014 blocks merge]\n    - Important Issues: [should fix before merge]\n    - Minor Issues: [nice to have]\n    - Strengths: [what was done well]\n    - Verdict: APPROVE / REQUEST_CHANGES\n    \"\"\",\n    toolsets=['file']\n)\n```\n\n### Step 4: Act on Feedback\n\n**Critical Issues (block merge):**\n- Security vulnerabilities\n- Broken functionality\n- Data loss risk\n- Test failures\n- **Action:** Fix immediate",
+        "checkpoint": "Verify review process is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "review_dimensions",
+        "description": "### Correctness\n- Does it implement the requirements?\n- Are there logic errors?\n- Do edge cases work?\n- Are there race conditions?\n\n### Code Quality\n- Is code readable?\n- Are names clear and descriptive?\n- Is it too complex? (Functions >20 lines = smell)\n- Is there duplication?\n\n### Testing\n- Are there meaningful tests?\n- Do they cover edge cases?\n- Do they test behavior, not implementation?\n- Do all tests pass?\n\n### Security\n- Any injection vulnerabilities?\n- Proper input validation?\n- Secrets handled correctly?\n- Access control in place?\n\n### Performance\n- Any N+1 queries?\n- Unnecessary computation in loops?\n- Memory leaks?\n- Missing caching opportunities?",
+        "checkpoint": "Verify review dimensions is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "review_output_format",
+        "description": "Standard format for reviewer subagent output:\n\n```markdown",
+        "checkpoint": "Verify review output format is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "review_summary",
+        "description": "**Assessment:** [Brief overall assessment]\n**Verdict:** APPROVE / REQUEST_CHANGES\n\n---",
+        "checkpoint": "Verify review summary is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "critical_issues__fix_required",
+        "description": "1. **[Issue title]**\n   - Location: `file.py:45`\n   - Problem: [Description]\n   - Suggestion: [How to fix]",
+        "checkpoint": "Verify critical issues (fix required) is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from requesting-code-review skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all requesting code review scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent completed a feature and directly merged it \u2014 no review, shipped a security vulnerability",
+        "solution": "when_to_request_review: Mandatory review before merge caught SQL injection in the new endpoint.",
+        "outcome": "Vulnerability patched before production. 30-minute incident avoided."
+      },
+      {
+        "problem": "Agent requested review but didn't run tests first \u2014 reviewer found 3 test failures in the PR",
+        "solution": "review_process Step 1: Self-review first ran pytest. Fixed 3 failures before dispatching reviewer.",
+        "outcome": "Reviewer received clean PR. No back-and-forth on known issues."
+      },
+      {
+        "problem": "Agent dispatched reviewer without context \u2014 subagent asked 10 clarifying questions",
+        "solution": "review_process Step 3: Provided full context including original requirements, files changed, and review checklist in delegate_task context.",
+        "outcome": "Reviewer subagent completed in one pass without questions."
+      }
+    ]
+  },
+  "guild://hermes/subagent-driven-development": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/subagent-driven-development",
+    "problem_class": "Use when executing implementation plans with independent tasks. Dispatches fresh delegate_task per task with two-stage review (spec compliance then code quality).",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "the_process",
+        "description": "### 1. Read and Parse Plan\n\nRead the plan file. Extract ALL tasks with their full text and context upfront. Create a todo list:\n\n```python\n# Read the plan\nread_file(\"docs/plans/feature-plan.md\")\n\n# Create todo list with all tasks\ntodo([\n    {\"id\": \"task-1\", \"content\": \"Create User model with email field\", \"status\": \"pending\"},\n    {\"id\": \"task-2\", \"content\": \"Add credential hashing utility\", \"status\": \"pending\"},\n    {\"id\": \"task-3\", \"content\": \"Create login endpoint\", \"status\": \"pending\"},\n])\n```\n\n**Key:** Read the plan ONCE. Extract everything. Don't make subagents read the plan file \u2014 provide the full task text directly in context.\n\n### 2. Per-Task Workflow\n\nFor EACH task in the plan:\n\n#### Step 1: Dispatch Implementer Subagent\n\nUse `delegate_task` with complete context:\n\n```python\ndelegate_task(\n    goal=\"Implement Task 1: Create User model with email and password_hash fields\",\n    context=\"\"\"\n    TASK FROM PLAN:\n    - Create: src/models/user.py\n    - Add User class with email (str) and password_hash (str) fields\n    - Use bcrypt for credential hashing\n    - Include __repr__ for debugging\n\n    FOLLOW TDD:\n    1. Write failing test in tests/models/test_user.py\n    2. Run: pytest tests/models/test_user.py -v (verify FAIL)\n    3. Write minimal implementation\n    4. Run: pytest tests/models/test_user.py -v (verify PASS)\n    5. Run: pytest tests/ -q (verify no regressions)\n    6. Commit: git add -A && git commit -m \"feat: add User model with credential hashing\"\n\n    PROJECT CONTEXT:\n    - Python 3.11, Flask app in src/app.py\n    - Existing models in src/models/\n    - Tests use pytest, run from project root\n    - bcrypt already in requirements.txt\n    \"\"\",\n    toolsets=['terminal', 'file']\n)\n```\n\n#### Step 2: Dispatch Spec Compliance Reviewer\n\nAfter the implementer completes, verify against the original spec:\n\n```python\ndelegate_task(\n    goal=\"Review if implementation matches the spec from the plan\",\n    context=\"\"\"\n    ORIGINAL TASK SPEC:\n    - Create src/models/user.py w",
+        "checkpoint": "Verify the process is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "task_granularity",
+        "description": "**Each task = 2-5 minutes of focused work.**\n\n**Too big:**\n- \"Implement user authentication system\"\n\n**Right size:**\n- \"Create User model with email and credential fields\"\n- \"Add credential hashing function\"\n- \"Create login endpoint\"\n- \"Add JWT auth credential generation\"\n- \"Create registration endpoint\"",
+        "checkpoint": "Verify task granularity is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "red_flags___never_do_these",
+        "description": "- Start implementation without a plan\n- Skip reviews (spec compliance OR code quality)\n- Proceed with unfixed critical/important issues\n- Dispatch multiple implementation subagents for tasks that touch the same files\n- Make subagent read the plan file (provide full text in context instead)\n- Skip scene-setting context (subagent needs to understand where the task fits)\n- Ignore subagent questions (answer before letting them proceed)\n- Accept \"close enough\" on spec compliance\n- Skip review loops (reviewer found issues \u2192 implementer fixes \u2192 review again)\n- Let implementer self-review replace actual review (both are needed)\n- **Start code quality review before spec compliance is PASS** (wrong order)\n- Move to next task while either review has open issues",
+        "checkpoint": "Verify red flags \u2014 never do these is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "handling_issues",
+        "description": "### If Subagent Asks Questions\n\n- Answer clearly and completely\n- Provide additional context if needed\n- Don't rush them into implementation\n\n### If Reviewer Finds Issues\n\n- Implementer subagent (or a new one) fixes them\n- Reviewer reviews again\n- Repeat until approved\n- Don't skip the re-review\n\n### If Subagent Fails a Task\n\n- Dispatch a new fix subagent with specific instructions about what went wrong\n- Don't try to fix manually in the controller session (context pollution)",
+        "checkpoint": "Verify handling issues is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "efficiency_notes",
+        "description": "**Why fresh subagent per task:**\n- Prevents context pollution from accumulated state\n- Each subagent gets clean, focused context\n- No confusion from prior tasks' code or reasoning\n\n**Why two-stage review:**\n- Spec review catches under/over-building early\n- Quality review ensures the implementation is well-built\n- Catches issues before they compound across tasks\n\n**Cost trade-off:**\n- More subagent invocations (implementer + 2 reviewers per task)\n- But catches issues early (cheaper than debugging compounded problems later)",
+        "checkpoint": "Verify efficiency notes is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "integration_with_other_skills",
+        "description": "### With writing-plans\n\nThis skill EXECUTES plans created by the writing-plans skill:\n1. User requirements \u2192 writing-plans \u2192 implementation plan\n2. Implementation plan \u2192 subagent-driven-development \u2192 working code\n\n### With test-driven-development\n\nImplementer subagents should follow TDD:\n1. Write failing test first\n2. Implement minimal code\n3. Verify test passes\n4. Commit\n\nInclude TDD instructions in every implementer context.\n\n### With requesting-code-review\n\nThe two-stage review process IS the code review. For final integration review, use the requesting-code-review skill's review dimensions.\n\n### With systematic-debugging\n\nIf a subagent encounters bugs during implementation:\n1. Follow systematic-debugging process\n2. Find root cause before fixing\n3. Write regression test\n4. Resume implementation",
+        "checkpoint": "Verify integration with other skills is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from subagent-driven-development skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all subagent driven development scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent dispatched 3 subagents simultaneously to implement a feature \u2014 they overwrote each other's changes",
+        "solution": "the_process: Sequential dispatch per task. Each task touches different files (User model, auth utils, login endpoint). No conflicts.",
+        "outcome": "Clean sequential implementation. Each task completed without merge conflicts."
+      },
+      {
+        "problem": "Implementer subagent completed task but spec compliance reviewer found it didn't match requirements",
+        "solution": "the_process Step 2: Spec compliance review caught missing password_hash field. Implementer fixed before code quality review.",
+        "outcome": "Spec violation caught early. Fixed in same session, not after merge."
+      },
+      {
+        "problem": "Agent let implementer self-review their own code \u2014 obvious issues were missed",
+        "solution": "the_process: Separate reviewer subagent for code quality. Different perspective caught a race condition the implementer missed.",
+        "outcome": "Two-stage review caught what self-review would have missed. 2 reviewers > 1."
+      }
+    ]
+  },
+  "guild://software-development/systematic-debugging-rubric": {
+    "type": "critique_rubric",
+    "version": "1.0.0",
+    "id": "guild://software-development/systematic-debugging-rubric",
+    "domain": "software-development",
+    "criteria": [
+      {
+        "name": "root_cause_identification",
+        "description": "Was the actual root cause found before any fix was attempted? Is there evidence the agent understood WHY the bug occurred, not just WHERE?",
+        "weight": 0.3,
+        "scoring": "1.0 = Root cause clearly identified with evidence chain (error \u2192 trace \u2192 origin). Fix targets the origin, not the symptom. 0.5 = Correct area identified but explanation is vague or fix is at symptom rather than source. 0.0 = No investigation \u2014 jumped straight to a fix, or root cause is wrong.\n",
+        "examples_good": [
+          "Traced 'NoneType' error through 3 call levels to find that config loader silently returns None on missing key instead of raising",
+          "Identified race condition by instrumenting both threads and showing interleaved log output with timestamps"
+        ],
+        "examples_bad": [
+          "Saw NullPointerException, added a null check at the crash site without asking why the value was null",
+          "Said 'the test is flaky' without identifying the timing-dependent condition"
+        ]
+      },
+      {
+        "name": "evidence_gathering",
+        "description": "Did the agent gather concrete evidence \u2014 error messages, reproduction steps, git history, logs, data flow traces \u2014 before forming hypotheses?",
+        "weight": 0.2,
+        "scoring": "1.0 = Multiple evidence types collected (error output, reproduction, git diff, data flow trace). Evidence directly supports the root cause conclusion. 0.5 = Some evidence collected but gaps remain (e.g., didn't check git history, didn't reproduce). 0.0 = No evidence \u2014 hypothesis based on assumption or pattern matching alone.\n",
+        "examples_good": [
+          "Ran failing test with verbose output, checked git log for recent changes, traced the bad value through 3 functions to its origin",
+          "Added logging at service boundaries in multi-component system, ran once, identified exact component where data corrupted"
+        ],
+        "examples_bad": [
+          "Assumed the cause from the error message without reproducing or checking recent changes",
+          "Read the error but didn't trace data flow \u2014 fixed the first suspicious-looking code"
+        ]
+      },
+      {
+        "name": "fix_isolation",
+        "description": "Was the fix a single, focused change targeting the root cause? No bundled refactoring, no multi-fix commits, no symptom patches.",
+        "weight": 0.2,
+        "scoring": "1.0 = Single change addressing the identified root cause. Clean diff. No unrelated modifications. 0.5 = Fix addresses root cause but includes minor unrelated changes or cosmetic improvements. 0.0 = Multiple changes bundled together, or fix addresses symptom not cause, or shotgun debugging (change many things hoping one works).\n",
+        "examples_good": [
+          "Changed one line: the config loader now raises KeyError on missing key instead of returning None",
+          "Added mutex around the shared resource access \u2014 single change, targeted at the race condition"
+        ],
+        "examples_bad": [
+          "Fixed the bug AND refactored the file AND updated the linter config in one commit",
+          "Added null checks at 5 different call sites instead of fixing why the value was null"
+        ]
+      },
+      {
+        "name": "regression_testing",
+        "description": "Was a regression test written that fails without the fix and passes with it? Does the full test suite still pass?",
+        "weight": 0.2,
+        "scoring": "1.0 = Regression test exists, demonstrates the bug, passes with fix. Full suite green. 0.5 = Existing test was used to verify but no new regression test written. Or regression test written but full suite not run. 0.0 = No test verification at all, or fix introduced new failures.\n",
+        "examples_good": [
+          "Wrote test_config_raises_on_missing_key() that fails before fix, passes after. Full suite: 247 passed, 0 failed.",
+          "Added test reproducing the race condition with controlled thread scheduling. All 312 tests pass."
+        ],
+        "examples_bad": [
+          "Manually verified the fix works but wrote no test",
+          "Ran only the specific failing test, didn't check for regressions in the full suite"
+        ]
+      },
+      {
+        "name": "escalation_discipline",
+        "description": "Did the agent respect the Rule of Three? After 3 failed fixes, did it stop and question architecture? Did it escalate when genuinely stuck instead of thrashing?",
+        "weight": 0.1,
+        "scoring": "1.0 = Either fixed on first or second attempt, or correctly escalated after 3 failures with architectural analysis. 0.5 = Took 3+ attempts but eventually escalated. 0.0 = Thrashed through 4+ fix attempts without escalating, or never admitted being stuck.\n",
+        "examples_good": [
+          "After 3 failed fixes each revealing new coupling, stopped and said: 'This is an architectural problem. The cache shares mutable refs. We need to discuss a redesign.'",
+          "Fixed on first attempt after thorough Phase 1 investigation"
+        ],
+        "examples_bad": [
+          "Tried 6 different fixes over 3 hours, each creating new problems, never questioned the approach",
+          "Said 'I don't understand this' but kept making changes instead of asking for help"
+        ]
+      }
+    ],
+    "pass_threshold": 0.7,
+    "provenance": {
+      "author_agent": "agent://hermes/skill-retrofit-agent",
+      "created": "2026-03-22T21:22:00Z",
+      "evidence": "Derived from the Hermes systematic-debugging skill v1.1.0 phase structure and red flags. Criteria map directly to the skill's four phases and key anti-patterns. Weight distribution emphasizes root cause identification (0.30) reflecting the skill's Iron Law.\n",
+      "confidence": "inferred",
+      "failure_cases": [
+        "Root cause weight (0.30) may over-penalize agents that find the right fix through pattern matching without explicit causal chain",
+        "Escalation discipline criterion (0.10) is hard to evaluate when the bug was fixed on first attempt \u2014 becomes N/A",
+        "Regression testing criterion assumes a test framework exists \u2014 unfair for codebases without test infrastructure"
+      ]
+    }
+  },
+  "guild://hermes/systematic-debugging": {
+    "type": "workflow_pack",
+    "schema_version": "1.0",
+    "version": "3.0.0",
+    "id": "guild://hermes/systematic-debugging",
+    "problem_class": "Agent stuck in circular debugging \u2014 trying fixes without understanding root cause, breaking things, reverting, trying again. Use when quick-debug isn't enough.\n",
+    "mental_model": "NO FIXES WITHOUT ROOT CAUSE INVESTIGATION. The agent's #1 failure mode is guessing at fixes. This pack enforces: reproduce \u2192 investigate \u2192 hypothesize \u2192 test hypothesis \u2192 fix \u2192 verify. Each phase has a gate. You cannot skip ahead.\n",
+    "confidence": "tested",
+    "required_inputs": [
+      "error_message_or_failing_test",
+      "relevant_source_file"
+    ],
+    "escalation_rules": [
+      "If bug does not reproduce after 3 attempts, gather more context before continuing",
+      "If root cause spans multiple services, investigate each boundary separately",
+      "If fix requires changing public API, escalate for review"
+    ],
+    "failure_cases": [
+      "Concurrency bugs that dont reproduce deterministically",
+      "Environment-specific bugs (works on my machine)",
+      "Bugs in third-party dependencies"
+    ],
+    "phases": [
+      {
+        "name": "reproduce",
+        "description": "Reproduce the bug consistently. Capture exact error, stack trace, steps to trigger. Run the failing test in isolation with verbose output. If you cannot reproduce it, you cannot fix it \u2014 gather more data instead of guessing.\n",
+        "prompts": [
+          "Run the failing test in isolation with verbose output",
+          "Capture the full error message and stack trace",
+          "Verify the bug reproduces on consecutive runs"
+        ],
+        "checkpoint": "Bug reproduces consistently with documented steps and exact error captured\n",
+        "anti_patterns": [
+          "Guessing at fixes before reproducing",
+          "Skipping to Phase 3 without understanding the error",
+          "Assuming you know the cause from the error message alone"
+        ],
+        "skip_if": [
+          {
+            "condition": "error_type == 'ImportError'",
+            "reason": "Import errors fail deterministically \u2014 no reproduction needed"
+          }
+        ]
+      },
+      {
+        "name": "investigate_root_cause",
+        "description": "Trace the error to its source. Read the failing code. Check git blame for recent changes. Trace data flow from input to error point. Find where the bad value originates and follow it upstream.\n",
+        "prompts": [
+          "Read the source file at the error line and 20 lines of context",
+          "Check git log for recent changes to the failing file",
+          "Trace the variable/value that causes the error back to where it originates"
+        ],
+        "checkpoint": "Root cause identified to a specific function, line, or data flow \u2014 not just the symptom\n",
+        "anti_patterns": [
+          "Fixing the symptom instead of the cause",
+          "Making changes to files you havent read",
+          "Changing more than one thing at a time"
+        ],
+        "inject_if": [
+          {
+            "condition": "attempts > 2",
+            "message": "You've tried multiple approaches. Stop. List what you tried and why each failed before continuing."
+          }
+        ],
+        "context_prompts": [
+          {
+            "condition": "'NoneType' in error_message",
+            "prompt": "NoneType errors originate at the CALL SITE, not the method. Trace upstream."
+          },
+          {
+            "condition": "has_recent_changes",
+            "prompt": "This codebase changed recently. Check git log before investigating."
+          },
+          {
+            "condition": "error_in_test",
+            "prompt": "The error is in a test file. Check if the test itself is wrong before debugging production code."
+          }
+        ]
+      },
+      {
+        "name": "hypothesis_and_minimal_test",
+        "description": "Form a specific hypothesis about the root cause. Write a minimal test that fails with the current bug and would pass with the fix. State: X happens because Y.\n",
+        "prompts": [
+          "State your hypothesis: X happens because Y",
+          "Write a focused test that isolates the root cause",
+          "Verify the test fails for the right reason"
+        ],
+        "checkpoint": "Hypothesis stated explicitly and a failing test confirms it\n",
+        "anti_patterns": [
+          "Applying a fix without a hypothesis",
+          "Writing a test that passes before the fix",
+          "Testing multiple things at once"
+        ]
+      },
+      {
+        "name": "fix_and_verify",
+        "description": "Apply the minimal fix. Run the new test. Run the full test suite. No regressions. The fix must address the root cause identified in Phase 2.\n",
+        "prompts": [
+          "Apply the smallest change that fixes the root cause",
+          "Run the new regression test \u2014 must pass",
+          "Run the full test suite \u2014 no new failures"
+        ],
+        "checkpoint": "Fix applied, regression test passes, full suite green, zero new failures\n",
+        "anti_patterns": [
+          "Large refactors as bug fixes",
+          "Skipping the full test suite",
+          "Deleting the test that caught the bug"
+        ]
+      }
+    ],
+    "examples": [
+      {
+        "problem": "Agent spent 20 minutes trying random fixes for a TypeError in API handler",
+        "solution": "Pack forced reproduce \u2192 investigate flow. Stack trace showed wrong argument order in a function call 3 levels up. Fixed in 4 minutes once root cause was found.",
+        "outcome": "4 minutes vs 20 minutes. One targeted fix vs 6 reverted attempts."
+      },
+      {
+        "problem": "Flaky CI test fails 30% of the time with timeout",
+        "solution": "Reproduce phase caught race condition. Investigate phase traced to shared state between tests. Hypothesis: test isolation fixture missing. Confirmed.",
+        "outcome": "Test passed 100/100 after adding isolation. CI stable for 2 weeks."
+      },
+      {
+        "problem": "Import error after dependency upgrade",
+        "solution": "Investigate phase: git diff showed version bump. Search found the renamed module. One-line import fix.",
+        "outcome": "2 minutes. Would have been 15 without the systematic trace."
+      }
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes/guild-team",
+      "confidence": "tested",
+      "created": "2026-03-27T00:00:00Z",
+      "updated": "2026-03-27T16:00:00Z",
+      "failure_cases": [
+        "Concurrency bugs that dont reproduce deterministically",
+        "Environment-specific bugs (works on my machine)",
+        "Bugs in third-party dependencies"
+      ],
+      "evidence": "Tested across 12 debugging sessions. Reduces average fix time from 20+ minutes to under 8. Prevents the #1 agent anti-pattern: applying fixes before understanding root cause. Agents using this pack average 2.3 iterations vs 5.7 without.\n"
+    },
+    "start_signals": [
+      {
+        "error_pattern": "NoneType.*has no attribute",
+        "start_here": [
+          "the CALLER of the failing function \u2014 trace upstream",
+          "check what returned None"
+        ],
+        "avoid": [
+          "the method definition itself",
+          "adding None checks at the symptom"
+        ],
+        "reasoning": "NoneType means something upstream returned None unexpectedly"
+      },
+      {
+        "error_pattern": "ImportError|ModuleNotFoundError",
+        "start_here": [
+          "pyproject.toml or requirements.txt",
+          "the import statement"
+        ],
+        "avoid": [
+          "the module source code"
+        ],
+        "reasoning": "Module not found. Check installation, not implementation."
+      },
+      {
+        "error_pattern": "AssertionError.*test_",
+        "start_here": [
+          "the test file at the failing line",
+          "the function being tested"
+        ],
+        "avoid": [
+          "other test files",
+          "conftest.py"
+        ],
+        "reasoning": "Test assertion. Understand expected vs actual first."
+      },
+      {
+        "error_pattern": "KeyError|IndexError",
+        "start_here": [
+          "the data structure being accessed",
+          "where the data was populated"
+        ],
+        "avoid": [
+          "adding try/except around the access"
+        ],
+        "reasoning": "Bad access. Fix the data, not the accessor."
+      }
+    ]
+  },
+  "guild://hermes/test-driven-development": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/test-driven-development",
+    "problem_class": "Use when implementing any feature or bugfix, before writing implementation code. Enforces RED-GREEN-REFACTOR cycle with test-first approach.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "the_iron_law",
+        "description": "```\nNO PRODUCTION CODE WITHOUT A FAILING TEST FIRST\n```\n\nWrite code before the test? Delete it. Start over.\n\n**No exceptions:**\n- Don't keep it as \"reference\"\n- Don't \"adapt\" it while writing tests\n- Don't look at it\n- Delete means delete\n\nImplement fresh from tests. Period.",
+        "checkpoint": "Verify the iron law is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "red_green_refactor_cycle",
+        "description": "### RED \u2014 Write Failing Test\n\nWrite one minimal test showing what should happen.\n\n**Good test:**\n```python\ndef test_retries_failed_operations_3_times():\n    attempts = 0\n    def operation():\n        nonlocal attempts\n        attempts += 1\n        if attempts < 3:\n            raise Exception('fail')\n        return 'success'\n\n    result = retry_operation(operation)\n\n    assert result == 'success'\n    assert attempts == 3\n```\nClear name, tests real behavior, one thing.\n\n**Bad test:**\n```python\ndef test_retry_works():\n    mock = MagicMock()\n    mock.side_effect = [Exception(), Exception(), 'success']\n    result = retry_operation(mock)\n    assert result == 'success'  # What about retry count? Timing?\n```\nVague name, tests mock not real code.\n\n**Requirements:**\n- One behavior per test\n- Clear descriptive name (\"and\" in name? Split it)\n- Real code, not mocks (unless truly unavoidable)\n- Name describes behavior, not implementation\n\n### Verify RED \u2014 Watch It Fail\n\n**MANDATORY. Never skip.**\n\n```bash\n# Use terminal tool to run the specific test\npytest tests/test_feature.py::test_specific_behavior -v\n```\n\nConfirm:\n- Test fails (not errors from typos)\n- Failure message is expected\n- Fails because the feature is missing\n\n**Test passes immediately?** You're testing existing behavior. Fix the test.\n\n**Test errors?** Fix the error, re-run until it fails correctly.\n\n### GREEN \u2014 Minimal Code\n\nWrite the simplest code to pass the test. Nothing more.\n\n**Good:**\n```python\ndef add(a, b):\n    return a + b  # Nothing extra\n```\n\n**Bad:**\n```python\ndef add(a, b):\n    result = a + b\n    logging.info(f\"Adding {a} + {b} = {result}\")  # Extra!\n    return result\n```\n\nDon't add features, refactor other code, or \"improve\" beyond the test.\n\n**Cheating is OK in GREEN:**\n- Hardcode return values\n- Copy-paste\n- Duplicate code\n- Skip edge cases\n\nWe'll fix it in REFACTOR.\n\n### Verify GREEN \u2014 Watch It Pass\n\n**MANDATORY.**\n\n```bash\n# Run the specific test\npytest tests/test_feature.py::test_specific_behavior",
+        "checkpoint": "Verify red-green-refactor cycle is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "why_order_matters",
+        "description": "**\"I'll write tests after to verify it works\"**\n\nTests written after code pass immediately. Passing immediately proves nothing:\n- Might test the wrong thing\n- Might test implementation, not behavior\n- Might miss edge cases you forgot\n- You never saw it catch the bug\n\nTest-first forces you to see the test fail, proving it actually tests something.\n\n**\"I already manually tested all the edge cases\"**\n\nManual testing is ad-hoc. You think you tested everything but:\n- No record of what you tested\n- Can't re-run when code changes\n- Easy to forget cases under pressure\n- \"It worked when I tried it\" \u2260 comprehensive\n\nAutomated tests are systematic. They run the same way every time.\n\n**\"Deleting X hours of work is wasteful\"**\n\nSunk cost fallacy. The time is already gone. Your choice now:\n- Delete and rewrite with TDD (high confidence)\n- Keep it and add tests after (low confidence, likely bugs)\n\nThe \"waste\" is keeping code you can't trust.\n\n**\"TDD is dogmatic, being pragmatic means adapting\"**\n\nTDD IS pragmatic:\n- Finds bugs before commit (faster than debugging after)\n- Prevents regressions (tests catch breaks immediately)\n- Documents behavior (tests show how to use code)\n- Enables refactoring (change freely, tests catch breaks)\n\n\"Pragmatic\" shortcuts = debugging in production = slower.\n\n**\"Tests after achieve the same goals \u2014 it's spirit not ritual\"**\n\nNo. Tests-after answer \"What does this do?\" Tests-first answer \"What should this do?\"\n\nTests-after are biased by your implementation. You test what you built, not what's required. Tests-first force edge case discovery before implementing.",
+        "checkpoint": "Verify why order matters is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "red_flags___stop_and_start_over",
+        "description": "If you catch yourself doing any of these, delete the code and restart with TDD:\n\n- Code before test\n- Test after implementation\n- Test passes immediately on first run\n- Can't explain why test failed\n- Tests added \"later\"\n- Rationalizing \"just this once\"\n- \"I already manually tested it\"\n- \"Tests after achieve the same purpose\"\n- \"Keep as reference\" or \"adapt existing code\"\n- \"Already spent X hours, deleting is wasteful\"\n- \"TDD is dogmatic, I'm being pragmatic\"\n- \"This is different because...\"\n\n**All of these mean: Delete code. Start over with TDD.**",
+        "checkpoint": "Verify red flags \u2014 stop and start over is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "verification_checklist",
+        "description": "Before marking work complete:\n\n- [ ] Every new function/method has a test\n- [ ] Watched each test fail before implementing\n- [ ] Each test failed for expected reason (feature missing, not typo)\n- [ ] Wrote minimal code to pass each test\n- [ ] All tests pass\n- [ ] Output pristine (no errors, warnings)\n- [ ] Tests use real code (mocks only if unavoidable)\n- [ ] Edge cases and errors covered\n\nCan't check all boxes? You skipped TDD. Start over.",
+        "checkpoint": "Verify verification checklist is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "when_stuck",
+        "description": "| Problem | Solution |\n|---------|----------|\n| Don't know how to test | Write the wished-for API. Write the assertion first. Ask the user. |\n| Test too complicated | Design too complicated. Simplify the interface. |\n| Must mock everything | Code too coupled. Use dependency injection. |\n| Test setup huge | Extract helpers. Still complex? Simplify the design. |",
+        "checkpoint": "Verify when stuck is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from test-driven-development skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all test driven development scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent wrote implementation code first, then wrote tests that passed immediately",
+        "solution": "the_iron_law: Deleted the implementation. Wrote failing test first, watched it fail with expected error, then implemented.",
+        "outcome": "Test actually validates behavior. Bug caught in the RED phase instead of slipping through."
+      },
+      {
+        "problem": "Agent wrote a test that tested implementation details (mocked everything) \u2014 refactoring broke all tests",
+        "solution": "red_green_refactor_cycle: Wrote tests against real behavior (test_retries_3_times, not test_mock_was_called). Refactoring didn't break tests.",
+        "outcome": "Tests survived refactoring. Behavior coverage maintained."
+      },
+      {
+        "problem": "Agent wrote tests after implementation \u2014 found 5 edge cases that implementation didn't handle",
+        "solution": "why_order_matters: Test-first discipline would have revealed missing edge cases before code was written. Empty input, null values, boundary conditions all discovered in RED.",
+        "outcome": "Edge cases handled from start. Test-first would have saved 2 hours of rework."
+      }
+    ]
+  },
+  "guild://hermes/writing-plans": {
+    "type": "workflow_pack",
+    "version": "1.0.0",
+    "id": "guild://hermes/writing-plans",
+    "problem_class": "Use when you have a spec or requirements for a multi-step task. Creates comprehensive implementation plans with bite-sized tasks, exact file paths, and complete code examples.",
+    "mental_model": "",
+    "required_inputs": [
+      "task_description: what you need to accomplish"
+    ],
+    "phases": [
+      {
+        "name": "bite_sized_task_granularity",
+        "description": "**Each task = 2-5 minutes of focused work.**\n\nEvery step is one action:\n- \"Write the failing test\" \u2014 step\n- \"Run it to make sure it fails\" \u2014 step\n- \"Implement the minimal code to make the test pass\" \u2014 step\n- \"Run the tests and make sure they pass\" \u2014 step\n- \"Commit\" \u2014 step\n\n**Too big:**\n```markdown\n### Task 1: Build authentication system\n[50 lines of code across 5 files]\n```\n\n**Right size:**\n```markdown\n### Task 1: Create User model with email field\n[10 lines, 1 file]\n\n### Task 2: Add credential hash field to User\n[8 lines, 1 file]\n\n### Task 3: Create credential hashing utility\n[15 lines, 1 file]\n```",
+        "checkpoint": "Verify bite-sized task granularity is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "plan_document_structure",
+        "description": "### Header (Required)\n\nEvery plan MUST start with:\n\n```markdown\n# [Feature Name] Implementation Plan\n\n> **For Hermes:** Use subagent-driven-development skill to implement this plan task-by-task.\n\n**Goal:** [One sentence describing what this builds]\n\n**Architecture:** [2-3 sentences about approach]\n\n**Tech Stack:** [Key technologies/libraries]\n\n---\n```\n\n### Task Structure\n\nEach task follows this format:\n\n````markdown\n### Task N: [Descriptive Name]\n\n**Objective:** What this task accomplishes (one sentence)\n\n**Files:**\n- Create: `exact/path/to/new_file.py`\n- Modify: `exact/path/to/existing.py:45-67` (line numbers if known)\n- Test: `tests/path/to/test_file.py`\n\n**Step 1: Write failing test**\n\n```python\ndef test_specific_behavior():\n    result = function(input)\n    assert result == expected\n```\n\n**Step 2: Run test to verify failure**\n\nRun: `pytest tests/path/test.py::test_specific_behavior -v`\nExpected: FAIL \u2014 \"function not defined\"\n\n**Step 3: Write minimal implementation**\n\n```python\ndef function(input):\n    return expected\n```\n\n**Step 4: Run test to verify pass**\n\nRun: `pytest tests/path/test.py::test_specific_behavior -v`\nExpected: PASS\n\n**Step 5: Commit**\n\n```bash\ngit add tests/path/test.py src/path/file.py\ngit commit -m \"feat: add specific feature\"\n```\n````",
+        "checkpoint": "Verify plan document structure is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "writing_process",
+        "description": "### Step 1: Understand Requirements\n\nRead and understand:\n- Feature requirements\n- Design documents or user description\n- Acceptance criteria\n- Constraints\n\n### Step 2: Explore the Codebase\n\nUse Hermes tools to understand the project:\n\n```python\n# Understand project structure\nsearch_files(\"*.py\", target=\"files\", path=\"src/\")\n\n# Look at similar features\nsearch_files(\"similar_pattern\", path=\"src/\", file_glob=\"*.py\")\n\n# Check existing tests\nsearch_files(\"*.py\", target=\"files\", path=\"tests/\")\n\n# Read key files\nread_file(\"src/app.py\")\n```\n\n### Step 3: Design Approach\n\nDecide:\n- Architecture pattern\n- File organization\n- Dependencies needed\n- Testing strategy\n\n### Step 4: Write Tasks\n\nCreate tasks in order:\n1. Setup/infrastructure\n2. Core functionality (TDD for each)\n3. Edge cases\n4. Integration\n5. Cleanup/documentation\n\n### Step 5: Add Complete Details\n\nFor each task, include:\n- **Exact file paths** (not \"the config file\" but `src/config/settings.py`)\n- **Complete code examples** (not \"add validation\" but the actual code)\n- **Exact commands** with expected output\n- **Verification steps** that prove the task works\n\n### Step 6: Review the Plan\n\nCheck:\n- [ ] Tasks are sequential and logical\n- [ ] Each task is bite-sized (2-5 min)\n- [ ] File paths are exact\n- [ ] Code examples are complete (copy-pasteable)\n- [ ] Commands are exact with expected output\n- [ ] No missing context\n- [ ] DRY, YAGNI, TDD principles applied\n\n### Step 7: Save the Plan\n\n```bash\nmkdir -p docs/plans\n# Save plan to docs/plans/YYYY-MM-DD-feature-name.md\ngit add docs/plans/\ngit commit -m \"docs: add implementation plan for [feature]\"\n```",
+        "checkpoint": "Verify writing process is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "principles",
+        "description": "### DRY (Don't Repeat Yourself)\n\n**Bad:** Copy-paste validation in 3 places\n**Good:** Extract validation function, use everywhere\n\n### YAGNI (You Aren't Gonna Need It)\n\n**Bad:** Add \"flexibility\" for future requirements\n**Good:** Implement only what's needed now\n\n```python\n# Bad \u2014 YAGNI violation\nclass User:\n    def __init__(self, name, email):\n        self.name = name\n        self.email = email\n        self.preferences = {}  # Not needed yet!\n        self.metadata = {}     # Not needed yet!\n\n# Good \u2014 YAGNI\nclass User:\n    def __init__(self, name, email):\n        self.name = name\n        self.email = email\n```\n\n### TDD (Test-Driven Development)\n\nEvery task that produces code should include the full TDD cycle:\n1. Write failing test\n2. Run to verify failure\n3. Write minimal code\n4. Run to verify pass\n\nSee `test-driven-development` skill for details.\n\n### Frequent Commits\n\nCommit after every task:\n```bash\ngit add [files]\ngit commit -m \"type: description\"\n```",
+        "checkpoint": "Verify principles is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "common_mistakes",
+        "description": "### Vague Tasks\n\n**Bad:** \"Add authentication\"\n**Good:** \"Create User model with email and password_hash fields\"\n\n### Incomplete Code\n\n**Bad:** \"Step 1: Add validation function\"\n**Good:** \"Step 1: Add validation function\" followed by the complete function code\n\n### Missing Verification\n\n**Bad:** \"Step 3: Test it works\"\n**Good:** \"Step 3: Run `pytest tests/test_auth.py -v`, expected: 3 passed\"\n\n### Missing File Paths\n\n**Bad:** \"Create the model file\"\n**Good:** \"Create: `src/models/user.py`\"",
+        "checkpoint": "Verify common mistakes is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      },
+      {
+        "name": "execution_handoff",
+        "description": "After saving the plan, offer the execution approach:\n\n**\"Plan complete and saved. Ready to execute using subagent-driven-development \u2014 I'll dispatch a fresh subagent per task with two-stage review (spec compliance then code quality). Shall I proceed?\"**\n\nWhen executing, use the `subagent-driven-development` skill:\n- Fresh `delegate_task` per task with full context\n- Spec compliance review after each task\n- Code quality review after spec passes\n- Proceed only when both reviews approve",
+        "checkpoint": "Verify execution handoff is complete and correct.",
+        "anti_patterns": [],
+        "prompts": []
+      }
+    ],
+    "escalation_rules": [
+      "If stuck after 2 attempts, ask the user for guidance"
+    ],
+    "provenance": {
+      "author_agent": "agent://hermes-seed",
+      "created": "2026-03-24T12:00:00Z",
+      "evidence": "Auto-generated from writing-plans skill. Requires validation through usage.",
+      "confidence": "inferred",
+      "failure_cases": [
+        "May not apply to all writing plans scenarios"
+      ]
+    },
+    "examples": [
+      {
+        "problem": "Agent wrote 'Add validation' in the plan \u2014 subagent had to ask what kind, where, and how",
+        "solution": "writing_process Step 5: Included complete code: def validate_email(email): if '@' not in email: raise ValueError('Invalid email'). Exact file path, copy-paste ready.",
+        "outcome": "Subagent executed without questions. Implementation matched requirements exactly."
+      },
+      {
+        "problem": "Agent spent an hour writing a 50-step plan for a simple bug fix",
+        "solution": "scope_appropriateness: Simplified to 4 steps matching the actual complexity: write failing test, identify bug, fix, verify. 15 minutes total.",
+        "outcome": "Plan focused on actual work. User approved quickly, implementation started sooner."
+      },
+      {
+        "problem": "Agent wrote a plan but didn't include verification steps \u2014 subagent thought 'it works' was enough",
+        "solution": "writing_process Step 5: Every task ends with: Run pytest tests/x.py -v expected: PASS. Full suite run: expected: 0 new failures.",
+        "outcome": "Verification explicit. Subagent confirmed tests pass, no regressions introduced."
+      }
+    ]
+  }
 }

@@ -275,3 +275,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all github code review scenarios
+
+examples:
+  - problem: "Agent reviewed a PR locally but only looked at the diff — missed that a function was incorrectly called in 3 other files"
+    solution: "1__reviewing_local_changes__pre_push: For each changed file, used read_file to see full context. Found incorrect function call pattern in related files."
+    outcome: "Systematic issue found across codebase, not just in the diff. PR blocked until all call sites fixed."
+  - problem: "Agent posted a review to GitHub but didn't check out the PR locally, so couldn't run tests"
+    solution: "5__pr_review_workflow__end_to_end: Checked out PR locally, ran test suite. Found 2 failing tests that diff alone wouldn't reveal."
+    outcome: "CI failures caught before merge. Review posted with full test results."
+  - problem: "Agent reviewed a 50-file PR in one pass and missed several issues"
+    solution: "3__review_checklist: Applied structured checklist (Correctness, Security, Code Quality, Testing, Performance, Documentation) systematically to each file."
+    outcome: "All 8 issues found across 6 categories. Organized feedback by severity."

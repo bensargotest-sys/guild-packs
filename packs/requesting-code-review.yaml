@@ -162,3 +162,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all requesting code review scenarios
+
+examples:
+  - problem: "Agent completed a feature and directly merged it — no review, shipped a security vulnerability"
+    solution: "when_to_request_review: Mandatory review before merge caught SQL injection in the new endpoint."
+    outcome: "Vulnerability patched before production. 30-minute incident avoided."
+  - problem: "Agent requested review but didn't run tests first — reviewer found 3 test failures in the PR"
+    solution: "review_process Step 1: Self-review first ran pytest. Fixed 3 failures before dispatching reviewer."
+    outcome: "Reviewer received clean PR. No back-and-forth on known issues."
+  - problem: "Agent dispatched reviewer without context — subagent asked 10 clarifying questions"
+    solution: "review_process Step 3: Provided full context including original requirements, files changed, and review checklist in delegate_task context."
+    outcome: "Reviewer subagent completed in one pass without questions."

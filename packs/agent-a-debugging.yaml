@@ -453,3 +453,14 @@ provenance:
   - Problems in third-party closed-source code where source inspection is impossible
   - When the user says 'just fix it' and the 4-phase approach feels too slow for a
     trivial issue
+
+examples:
+  - problem: "Agent spent 25 minutes applying random fixes to a TypeError in user.py, reverting 4 times"
+    solution: "Phase 1 forced error reading + git log investigation. Found a recent commit changed a function signature. Phase 2 traced the call site. One-line fix."
+    outcome: "5 minutes vs 25 minutes. One targeted fix vs 4 reverted attempts."
+  - problem: "Agent added null checks at 6 different call sites for an AttributeError"
+    solution: "Phase 1 traced the None value upstream via search_files. Found config loader silently returns None for missing keys. Fixed at the source."
+    outcome: "Root cause fixed in 2 minutes. 6 unnecessary null checks removed."
+  - problem: "Flaky test failed intermittently — agent assumed it was a timing issue and added sleep() calls"
+    solution: "Phase 1 reproduce caught the real issue: shared database state between tests. Phase 2 pattern analysis found the test isolation fixture was broken."
+    outcome: "Fixed test isolation instead of adding sleeps. 100% pass rate on CI."

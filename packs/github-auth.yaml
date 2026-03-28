@@ -182,3 +182,14 @@ provenance:
   confidence: inferred
   failure_cases:
   - May not apply to all github auth scenarios
+
+examples:
+  - problem: "Agent tried to push to GitHub but got 'fatal: Authentication failed' — user had forgotten they set up gh CLI"
+    solution: "detection_flow: Checked gh auth status first. Found gh was installed and authenticated. Switched from git-only to gh commands."
+    outcome: "Push succeeded immediately using gh instead of debugging git credential helpers."
+  - problem: "User provided a GitHub token but agent couldn't push — token lacked repo scope"
+    solution: "method_1__git_only_authentication: Detected permission denied error, identified token scope issue. User regenerated token with repo scope."
+    outcome: "Push worked after correct scopes were set. 5 minutes vs 30 minutes of debugging."
+  - problem: "Agent on a server with no sudo couldn't install gh, fell back to git-only method"
+    solution: "method_1__git_only_authentication: Set up credential helper store. Used HTTPS with embedded token. Worked without any installation."
+    outcome: "Authentication completed without package manager. Git operations working."
