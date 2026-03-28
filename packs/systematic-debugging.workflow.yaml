@@ -124,7 +124,7 @@ provenance:
     root cause. Agents using this pack average 2.3 iterations vs 5.7 without.
 
 start_signals:
-  - error_pattern: "NoneType has no attribute"
+  - error_pattern: "NoneType.*has no attribute"
     start_here:
       - "the CALLER of the failing function — trace upstream"
       - "check what returned None"
