@@ -38,6 +38,9 @@ phases:
       - "Guessing at fixes before reproducing"
       - "Skipping to Phase 3 without understanding the error"
       - "Assuming you know the cause from the error message alone"
+    skip_if:
+      - condition: "error_type == 'ImportError'"
+        reason: "Import errors fail deterministically — no reproduction needed"
 
   - name: investigate_root_cause
     description: >
@@ -54,6 +57,16 @@ phases:
       - "Fixing the symptom instead of the cause"
       - "Making changes to files you havent read"
       - "Changing more than one thing at a time"
+    inject_if:
+      - condition: "attempts > 2"
+        message: "You've tried multiple approaches. Stop. List what you tried and why each failed before continuing."
+    context_prompts:
+      - condition: "'NoneType' in error_message"
+        prompt: "NoneType errors originate at the CALL SITE, not the method. Trace upstream."
+      - condition: "has_recent_changes"
+        prompt: "This codebase changed recently. Check git log before investigating."
+      - condition: "error_in_test"
+        prompt: "The error is in a test file. Check if the test itself is wrong before debugging production code."
 
   - name: hypothesis_and_minimal_test
     description: >
